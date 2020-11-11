@@ -3,4 +3,7 @@ This is the repo for the planning final project on socially compliant autonomous
 
 Download CARLA on your local machine first.
 
-To verify CARLA setup, run "simple_test.py" in lane_change.
+Start the simulator by running /opt/carla-simulator/bin/CarlaUE4.sh
+
+To verify CARLA setup, run "simple_test.py" in lane_change with
+$ python simple_test.py
