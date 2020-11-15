@@ -1,36 +1,54 @@
+"""Lattice Generator will generate lattice graphs"""
 
-""" Lattice Generator will generate lattice graphs for the collision checker """
+import math
 
 import numpy as np
-import math
 import carla
+from shapely.geometry import LineString
+
+from planning_utils import slvt_to_cartesian, sample_trajectory, get_x_y_v_trajectory
+from path_optimizer import PathOptimizer
 
 
 class LatticeGenerator:
-	num_waypoints = 5
+    def __init__(self, center_line_linestring: LineString):
 
-	def __init__(self, speed, waypoint, current_lane_waypoints, right_lane_waypoints):
-		self.speed = speed  # m/s
-		self.waypoint = waypoint
-		# self.current_lane_waypoints = current_lane_waypoints
-		# self.right_lane_waypoints = right_lane_waypoints
-		self.lane_width = waypoint.lane_width
-		self.lane_change_time_constant = 4.5  # sec
-		self.lane_change_length = math.sqrt(
-		    (speed * self.lane_change_time_constant)**2. - self.lane_width**2.)  # based on time and speed
-		self.motionPrimitives = []
+        self.linestring = center_line_linestring
+        self.arc_length = self.linestring.length
+        self.path_optimizer = PathOptimizer()
 
-	def generateMotionPrimitives(self):
-		pass
+        self.s_l_lattice = self._generate_s_l_lattice(1, 60, 5)
 
-	def laneChangePrimitive(self):
-		pass
+    def sample_smooth_trajectory(self):
 
-	def acceleratePrimitive(self):
-		pass
+        ## Get smooth path in s-l frame
 
-	def deceleratePrimitive(self):
-		pass
+        paths = []
+        path_validity = []
 
-	def constSpeedPrimitive(self):
-		pass
+        # traj_x, traj_y, traj_v = get_x_y_v_trajectory(
+        #     sample_trajectory(max_v=18), self.s_l_lattice
+        # )
+
+    def _generate_s_l_lattice(
+        self,
+        span_l: float,
+        num_samples_s: float,
+        num_samples_l: float,
+    ):
+
+        lattice = []
+
+        for s in np.linspace(0, self.arc_length, num_samples_s):
+
+            x_coords = []
+            y_coords = []
+
+            for l in np.linspace(-span_l, span_l, num_samples_l):
+                lattice_pt = slvt_to_cartesian(self.linestring, s, l)
+                x_coords.append(lattice_pt[0])
+                y_coords.append(lattice_pt[1])
+
+            lattice.append([x_coords, y_coords])
+
+        return lattice
