@@ -101,11 +101,10 @@ class TrajGenerator:
         self.current_lane_waypoints = current_lane_waypoints
         # self.right_lane_waypoints = right_lane_waypoints
         self.lane_width = waypoint.lane_width
-        self.lane_change_time_constant = 4.5  # sec
-        # One pose per time disc for generated trajectories
-        self.lane_change_time_disc = 0.4
+        self.lane_change_time = 4.5  # sec. Based on https://toledo.net.technion.ac.il/files/2012/12/TRR_ToledoZohar_07.pdf between 4~5 seconds
+        self.lane_change_time_disc = 0.1  # One pose per time disc for generated trajectories
         # self.lane_change_length = math.sqrt((speed * self.lane_change_time_constant)**2. - self.lane_width**2.) # based on time and speed
-        self.lane_change_length = speed * self.lane_change_time_constant
+        self.lane_change_length = self.speed # Heuristic that approximates human lane change distance based on https://www.mchenrysoftware.com/board/viewtopic.php?t=339
 
     def findNextLanePose(self, cur_vehicle_pose, lane_pose_array):
         closest_pose = lane_pose_array[0]
@@ -125,14 +124,14 @@ class TrajGenerator:
         pass
 
     def cubicSplineGen(self, v_cur):
-        # v_cur = v_cur/3.6 # km/hr to m/s ?
+        v_cur = v_cur/3.6 # km/hr to m/s
         if v_cur < 5:
             v_cur = 5
         # determine external parameters
         w = self.lane_width
         l = self.lane_change_length
-        r = self.lane_change_time_constant
-        tf = math.sqrt(l**2 + w**2) * r / v_cur
+        tf = self.lane_change_time
+        # tf = math.sqrt(l**2 + w**2) * r / v_cur
 
         # parameters for x
         dx = 0
