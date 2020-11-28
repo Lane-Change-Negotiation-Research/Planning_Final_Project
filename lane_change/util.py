@@ -203,7 +203,7 @@ def setup_scenario(world, client, synchronous_master=False):
 
     print("Warm start initiated...")
     warm_start_curr = 0
-    while warm_start_curr < 5:
+    while warm_start_curr < 0:
         warm_start_curr += 0.05
         if synchronous_master:
             world.tick()

@@ -100,7 +100,7 @@ class PlanGenerator:
     def get_next_actions(self, k=10):
 
         return [
-            action.CONSTANT_SPEED,
+            action.ACCELERATE,
             action.ACCELERATE,
             action.ACCELERATE,
             action.ACCELERATE,
@@ -197,6 +197,7 @@ class TrajGenerator:
         # self.lane_change_length = self.start_speed # Heuristic that approximates human lane change distance based on https://www.mchenrysoftware.com/board/viewtopic.php?t=339
 
     def constTraj(self, starting_speed, starting_waypoint, k=10):
+        starting_speed = starting_speed / 3.6 # Change from km/hr to m/s
         sampling_radius = (
             starting_speed * self.traj_time / k
         )  # Depends on distance to travel and number of points
@@ -212,7 +213,7 @@ class TrajGenerator:
                 # only one option available ==> lanefollowing
                 next_waypoint = next_waypoints[0]
                 next_pose = next_waypoint.transform.location
-                next_pose = PoseTemp(next_pose.x, next_pose.y, 0, starting_speed)
+                next_pose = PoseTemp(next_pose.x, next_pose.y, 0, starting_speed*3.6)
 
             traj_poses.append(next_pose)
             last_waypoint = next_waypoint
@@ -221,6 +222,7 @@ class TrajGenerator:
         return traj_poses, last_waypoint
 
     def accTraj(self, starting_speed, starting_waypoint, k=10):
+        starting_speed = starting_speed/3.6 # Change from km/hr to m/s
         last_waypoint = starting_waypoint
         traj_poses = []
         jerk_k = (
@@ -265,7 +267,7 @@ class TrajGenerator:
                 # only one option available ==> lanefollowing
                 next_waypoint = next_waypoints[0]
                 next_pose = next_waypoint.transform.location
-                next_pose = PoseTemp(next_pose.x, next_pose.y, 0, next_v)
+                next_pose = PoseTemp(next_pose.x, next_pose.y, 0, next_v*3.6)
 
             traj_poses.append(next_pose)
             last_waypoint = next_waypoint
@@ -273,6 +275,7 @@ class TrajGenerator:
         return traj_poses, last_waypoint
 
     def decTraj(self, starting_speed, starting_waypoint, k=10):
+        starting_speed = starting_speed/3.6 # Change from km/hr to m/s
         last_waypoint = starting_waypoint
         traj_poses = []
         jerk_k = (
@@ -317,7 +320,7 @@ class TrajGenerator:
                 # only one option available ==> lanefollowing
                 next_waypoint = next_waypoints[0]
                 next_pose = next_waypoint.transform.location
-                next_pose = PoseTemp(next_pose.x, next_pose.y, 0, next_v)
+                next_pose = PoseTemp(next_pose.x, next_pose.y, 0, next_v*3.6)
 
             traj_poses.append(next_pose)
             last_waypoint = next_waypoint
