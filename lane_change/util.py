@@ -41,6 +41,14 @@ def change_to_Town06():
     print("\ndone.")
 
 
+def get_ego_waypoint(world, ego_vehicle):
+
+    ego_vehicle_location = ego_vehicle.get_location()
+    nearest_waypoint = world.get_map().get_waypoint(
+        ego_vehicle_location, project_to_road=True)
+        
+    return nearest_waypoint
+
 def get_speed(vehicle):
     """
     Compute speed of a vehicle in Km/h.
