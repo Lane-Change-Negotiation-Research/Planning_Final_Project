@@ -13,10 +13,16 @@ import numpy as np
 from util import *
 
 try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+    sys.path.append(
+        glob.glob(
+            "../carla/dist/carla-*%d.%d-%s.egg"
+            % (
+                sys.version_info.major,
+                sys.version_info.minor,
+                "win-amd64" if os.name == "nt" else "linux-x86_64",
+            )
+        )[0]
+    )
 except IndexError:
     pass
 
@@ -32,36 +38,47 @@ from enum import Enum
 
 def get_state_information(ego_vehicle=None):
 
-    if(ego_vehicle == None):
+    if ego_vehicle == None:
         print("No ego vehicle specified..")
         return None
     else:
         # Get ego vehicle location and nearest waypoint for reference.
         ego_vehicle_location = ego_vehicle.get_location()
         nearest_waypoint = world.get_map().get_waypoint(
-            ego_vehicle_location, project_to_road=True)
+            ego_vehicle_location, project_to_road=True
+        )
 
-        ego_speed = np.sqrt(ego_vehicle.get_velocity(
-        ).x**2 + ego_vehicle.get_velocity().y**2 + ego_vehicle.get_velocity().z**2) * 3.6
+        ego_speed = (
+            np.sqrt(
+                ego_vehicle.get_velocity().x ** 2
+                + ego_vehicle.get_velocity().y ** 2
+                + ego_vehicle.get_velocity().z ** 2
+            )
+            * 3.6
+        )
 
-        current_lane_waypoints = get_next_waypoints(
-            nearest_waypoint, ego_speed, k=2)[::-1]
+        current_lane_waypoints = get_next_waypoints(nearest_waypoint, ego_speed, k=2)[
+            ::-1
+        ]
         # left_lane_waypoints =  self.get_next_waypoints(nearest_waypoint.get_left_lane(), ego_speed, k=300)[::-1] #+
         right_lane_waypoints = get_next_waypoints(
-            nearest_waypoint.get_right_lane(), ego_speed, k=2)[::-1]  # +
+            nearest_waypoint.get_right_lane(), ego_speed, k=2
+        )[
+            ::-1
+        ]  # +
 
     return ego_speed, nearest_waypoint, current_lane_waypoints, right_lane_waypoints
 
 
 def get_next_waypoints(last_waypoint, ego_speed, rev=False, k=100):
 
-    if(last_waypoint == None):
+    if last_waypoint == None:
         return []
 
     sampling_radius = 1  # ego_speed * 1 / 3.6
     full_waypoints = []
     for i in range(k):
-        if(rev == False):
+        if rev == False:
             next_waypoints = last_waypoint.next(sampling_radius)
         else:
             next_waypoints = last_waypoint.previous(sampling_radius)
@@ -82,8 +99,9 @@ def get_next_waypoints(last_waypoint, ego_speed, rev=False, k=100):
 
 def initialize(world):
     actors = world.get_actors()
-    client.apply_batch([carla.command.DestroyActor(x)
-                        for x in actors if 'vehicle' in x.type_id])
+    client.apply_batch(
+        [carla.command.DestroyActor(x) for x in actors if "vehicle" in x.type_id]
+    )
     settings = world.get_settings()
     settings.synchronous_mode = True  # Enables synchronous mode
     settings.fixed_delta_seconds = 0.05
@@ -95,34 +113,36 @@ def spawn_vehicles():
     vehicles_list = []
 
     blueprints = world.get_blueprint_library()
-    blueprints = [x for x in blueprints if x.id.endswith('model3')]
+    blueprints = [x for x in blueprints if x.id.endswith("model3")]
 
     # spawn_points = world.get_map().get_spawn_points()
     sub_spawn_point = carla.Transform(
-        Location(x=530, y=-13.6, z=0.3), Rotation(yaw=180))
+        Location(x=530, y=-13.6, z=0.3), Rotation(yaw=180)
+    )
     ego_spawn_point = carla.Transform(
-        Location(x=535, y=-10.1, z=0.3), Rotation(yaw=180))
+        Location(x=535, y=-10.1, z=0.3), Rotation(yaw=180)
+    )
 
     # --------------
     # Spawn vehicles
     # --------------
     blueprint = random.choice(blueprints)
-    color = '0,0,255'
-    blueprint.set_attribute('color', color)
-    blueprint.set_attribute('role_name', 'autopilot')
+    color = "0,0,255"
+    blueprint.set_attribute("color", color)
+    blueprint.set_attribute("role_name", "autopilot")
 
     # subject vehicle
     subject = world.spawn_actor(blueprint, sub_spawn_point)
     vehicles_list.append(subject)
 
     # ego vehicle
-    color = '255,0,0'
-    blueprint.set_attribute('color', color)
+    color = "255,0,0"
+    blueprint.set_attribute("color", color)
     ego = world.spawn_actor(blueprint, ego_spawn_point)
     vehicles_list.append(ego)
     world.tick()
 
-    print('spawned %d vehicles.' % (len(vehicles_list)))
+    print("spawned %d vehicles." % (len(vehicles_list)))
     return ego, subject
 
 
@@ -130,32 +150,33 @@ def main(args):
     pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
+    argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        "--host",
+        metavar="H",
+        default="127.0.0.1",
+        help="IP of the host server (default: 127.0.0.1)",
+    )
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
+        "-p",
+        "--port",
+        metavar="P",
         default=2000,
         type=int,
-        help='TCP port to listen to (default: 2000)')
+        help="TCP port to listen to (default: 2000)",
+    )
     argparser.add_argument(
-        '--tm-port',
-        metavar='P',
+        "--tm-port",
+        metavar="P",
         default=8000,
         type=int,
-        help='port to communicate with TM (default: 8000)')
+        help="port to communicate with TM (default: 8000)",
+    )
     argparser.add_argument(
-        '--sync',
-        action='store_true',
-        default=True,
-        help='Synchronous mode execution')
+        "--sync", action="store_true", default=True, help="Synchronous mode execution"
+    )
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
@@ -173,14 +194,19 @@ if __name__ == '__main__':
 
     # Instantiate Ego Vehicle Controller
     vehicle_controller = VehiclePIDController(
-        ego, args_longitudinal={'K_P': 1.0, 'K_D': 0.0, 'K_I': 0.0})
+        ego, args_longitudinal={"K_P": 1.0, "K_D": 0.0, "K_I": 0.0}
+    )
 
     try:
 
         while True:
             # Get future trajectory
-            ego_speed, nearest_waypoint, current_lane_waypoints, right_lane_waypoints = get_state_information(
-                ego)
+            (
+                ego_speed,
+                nearest_waypoint,
+                current_lane_waypoints,
+                right_lane_waypoints,
+            ) = get_state_information(ego)
             # ego_speed = get_speed(ego)
             print("Driving at ", ego_speed, " m/s")
             # subject_speed, subject_waypoint, subject_current_lane_waypoints, _ = get_state_information(subject)
