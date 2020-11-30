@@ -19,8 +19,8 @@ class CollisionChecker:
         return collide
 
     def check_collision(self, ego, sub, ego_pos, sub_pos):
-        ego_rad = max(ego.bounding_box.extent.x, ego.bounding_box.extent.y)
-        sub_rad = max(sub.bounding_box.extent.x, sub.bounding_box.extent.y)
+        ego_rad = math.sqrt(pow(ego.bounding_box.extent.x, 2) + pow(ego.bounding_box.extent.y, 2))
+        sub_rad = math.sqrt(pow(sub.bounding_box.extent.x, 2) + pow(sub.bounding_box.extent.y, 2))
         center_dist = math.sqrt(pow(ego_pos[0] - sub_pos[0], 2) + pow(ego_pos[1] - sub_pos[1], 2))
         return center_dist <= ego_rad + sub_rad
 
