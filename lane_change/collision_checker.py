@@ -2,6 +2,7 @@
 based on the predicted subject path from Subject Predictor and the CARLA road environment. """
 from carla import *
 import numpy as np
+import math
 
 class CollisionChecker:
     def __init__(self):
@@ -17,17 +18,11 @@ class CollisionChecker:
         
         return collide
 
-    def check_collision(self, ego, subject, ego_pos, sub_pos):
-        sep_ax = false
-        if ego_pos[0] + ego.bounding_box.extent.x < subject_pos[0] - subject.bounding_box.extent.x or \
-            ego_pos[0] - ego.bounding_box.extent.x > subject_pos[0] + subject.bounding_box.extent.x:
-            sep_ax = true
-        
-        if ego_pos[1] + ego.bounding_box.extent.y < subject_pos[1] - subject.bounding_box.extent.y or \
-        ego_pos[1] - ego.bounding_box.extent.y > subject_pos[1] + subject.bounding_box.extent.y:
-            sep_ax = true
-
-        return not sep_ax
+    def check_collision(self, ego, sub, ego_pos, sub_pos):
+        ego_rad = max(ego.bounding_box.extent.x, ego.bounding_box.extent.y)
+        sub_rad = max(sub.bounding_box.extent.x, sub.bounding_box.extent.y)
+        center_dist = math.sqrt(pow(ego_pos[0] - sub_pos[0], 2) + pow(ego_pos[1] - sub_pos[1], 2))
+        return center_dist <= ego_rad + sub_rad
 
     def update_lattice(self, lattice_graph):
         self.lattice_graph = lattice_graph
