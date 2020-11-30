@@ -7,25 +7,24 @@ import math
 class CollisionChecker:
     def __init__(self):
 
-        self.lattice_graph = None
+        # self.lattice_graph = None
         self.subject_path = None
     
-    def predict_collision(self, ego, subject):
+    def predict_collision(self, ego, subject, ego_state):
         collide = false
-        for ego_pos in self.lattice_graph:
-            for sub_pos in self.subject_path:
-                collide = check_collision(ego, subject, ego_pos, sub_pos)
+        for sub_state in self.subject_path:
+            collide = check_collision(ego, subject, ego_state, sub_state)
         
         return collide
 
-    def check_collision(self, ego, sub, ego_pos, sub_pos):
+    def check_collision(self, ego, sub, ego_state, sub_state):
         ego_rad = math.sqrt(pow(ego.bounding_box.extent.x, 2) + pow(ego.bounding_box.extent.y, 2))
         sub_rad = math.sqrt(pow(sub.bounding_box.extent.x, 2) + pow(sub.bounding_box.extent.y, 2))
-        center_dist = math.sqrt(pow(ego_pos[0] - sub_pos[0], 2) + pow(ego_pos[1] - sub_pos[1], 2))
+        center_dist = math.sqrt(pow(ego_state.position[0] - sub_state.position[0], 2) + pow(ego_state.position[1] - sub_state.position[1], 2))
         return center_dist <= ego_rad + sub_rad
 
-    def update_lattice(self, lattice_graph):
-        self.lattice_graph = lattice_graph
+    # def update_lattice(self, lattice_graph):
+    #     self.lattice_graph = lattice_graph
 
     def update_subject_path(self, subject_path):
         self.subject_path = subject_path
