@@ -258,14 +258,11 @@ def reset_settings(world):
 
 
 def update_spectator(world, ego_vehicle):
-    camera = get_dummy_camera(world, ego_vehicle)
-    # if ego_vehicle.id != self.camera_parent_vehicle.id:  # new run
-    #     self.camera.destroy()
-    #     self.camera = self.get_dummy_camera(ego_vehicle)
-
     spectator = world.get_spectator()
-
-    spectator.set_transform(camera.get_transform())
+    spectator_transform = ego_vehicle.get_transform()
+    spectator_transform = carla.Transform(spectator_transform.location+carla.Location(x=0, y=0, z=10.0), 
+    carla.Rotation(pitch=-45))
+    spectator.set_transform(spectator_transform)
 
 
 def get_dummy_camera(world, ego_vehicle):
