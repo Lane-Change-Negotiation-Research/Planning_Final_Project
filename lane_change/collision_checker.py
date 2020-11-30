@@ -19,7 +19,7 @@ class CollisionChecker:
         return collide
 
     def check_collision(self, ego, sub, ego_state, sub_state):
-        if ego_state.time - sub_state.time < self.time_buffer:
+        if ego_state.time - sub_state.time > self.time_buffer:
             return false
 
         ego_rad = math.sqrt(pow(ego.bounding_box.extent.x, 2) + pow(ego.bounding_box.extent.y, 2))
