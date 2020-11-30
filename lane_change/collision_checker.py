@@ -5,10 +5,11 @@ import numpy as np
 import math
 
 class CollisionChecker:
-    def __init__(self):
+    def __init__(self, time=1):
 
         # self.lattice_graph = None
         self.subject_path = None
+        self.time_buffer = time
     
     def predict_collision(self, ego, subject, ego_state):
         collide = false
@@ -18,6 +19,9 @@ class CollisionChecker:
         return collide
 
     def check_collision(self, ego, sub, ego_state, sub_state):
+        if ego_state.time - sub_state.time < self.time_buffer:
+            return false
+
         ego_rad = math.sqrt(pow(ego.bounding_box.extent.x, 2) + pow(ego.bounding_box.extent.y, 2))
         sub_rad = math.sqrt(pow(sub.bounding_box.extent.x, 2) + pow(sub.bounding_box.extent.y, 2))
         center_dist = math.sqrt(pow(ego_state.position[0] - sub_state.position[0], 2) + pow(ego_state.position[1] - sub_state.position[1], 2))
