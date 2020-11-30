@@ -95,7 +95,7 @@ def control():
             control.steer = -0.265
         if counter > 218:
             control.steer = 0
-            ego.apply_control(control)
+        ego.apply_control(control)
 
 
 if __name__ == '__main__':
