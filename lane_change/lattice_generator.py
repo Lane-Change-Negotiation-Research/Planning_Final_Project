@@ -387,3 +387,41 @@ class LatticeGenerator:
 
         return 0
        
+if __name__ == "__main__":
+	road = Road()
+	actions = Actions()
+	constraints = Constraints()
+	termination_conditions = TerminationConditions()
+	start_state = State([0,-1.75], 18, 0)
+	cost_calculator = CostCalculator()
+	obstacles = []
+
+
+	latticeGenerator = LatticeGenerator(road = road,\
+										actions = actions,\
+										constraints= constraints,\
+										cost_calculator = cost_calculator,\
+										termination_conditions=termination_conditions,\
+										start_state=start_state,\
+										obstacles=obstacles)
+
+
+	full_lattice, state_2_cost = latticeGenerator.generate_full_lattice(start_state, actions)
+
+	# Example of full lattice access. 
+	print("Start State:" , (start_state.position[0], start_state.position[1], start_state.speed, start_state.time, 0))
+	print("Next states (Children)", full_lattice[(start_state.position[0], start_state.position[1], start_state.speed, start_state.time, 0)])
+
+	# Full_Lattice has state tuples as the keys.
+	# The value associated with each of these keys is a dict, which stores the next_state that will be achieved when applying action 0, 1, 2, 3 etc. In our example, 0 is acc, 1 is dec, 2 is constant speed, 3 is lane change.
+
+	# state : (x, y, speed, time, has_lane_change_happened)
+
+	# Example of state_2_cost
+	state_2_cost[(18, 1.75, 18, 4.5, 1)]
+
+	latticeGenerator.plot_some_trajectories(full_lattice, (start_state.position[0], start_state.position[1], start_state.speed, start_state.time, 0), 5)
+
+	random_trajectory = latticeGenerator.sample_and_plot_random_trajectory()
+	cost_of_random_trajectory = cost_calculator.compute_trajectory_cost(random_trajectory)
+	print("Cost of this trajectory:", cost_of_random_trajectory)
