@@ -65,7 +65,7 @@ class scenario_manager:
             self.subject_vehicle,
             self.current_lane_waypoints,
         ) = setup_scenario(self.world, self.client, synchronous_master=True)
-        # update_spectator(self.world, self.ego_vehicle) #TODO: Spectator is buggy
+        update_spectator(self.world, self.ego_vehicle) #TODO: Spectator is buggy
 
         # 2. #TODO: Create behavior control/ behavior generation capability for subject vehicle(s).
 
