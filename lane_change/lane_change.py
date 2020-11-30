@@ -86,7 +86,7 @@ def initialize(world):
                         for x in actors if 'vehicle' in x.type_id])
     settings = world.get_settings()
     settings.synchronous_mode = True  # Enables synchronous mode
-    settings.fixed_delta_seconds = 0.05
+    settings.fixed_delta_seconds = 0.03
     world.apply_settings(settings)
 
 

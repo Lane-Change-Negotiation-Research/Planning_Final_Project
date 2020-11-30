@@ -5,13 +5,20 @@
 __author__ = "Quentin Cheng"
 __email__ = "hantingc@andrew.cmu.edu"
 
+# from behavior_agent import BehaviorAgent
 import glob
 import os
 import sys
 import time
 import numpy as np
 from util import *
-
+try:
+    import pygame
+    from pygame.locals import KMOD_CTRL
+    from pygame.locals import K_ESCAPE
+    from pygame.locals import K_q
+except ImportError:
+    raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -63,6 +70,16 @@ def spawn_vehicles():
 
     # subject vehicle
     subject = world.spawn_actor(blueprint, sub_spawn_point)
+    # subject_agent = BehaviorAgent(subject, behavior='normal')
+    # spawn_points = world.map.get_spawn_points()
+    # random.shuffle(spawn_points)
+
+    # if spawn_points[0].location != subject_agent.vehicle.get_location():
+    #     destination = spawn_points[0].location
+    # else:
+    #     destination = spawn_points[1].location
+
+    # subject_agent.set_destination(subject_agent.vehicle.get_location(), destination, clean=True)
     vehicles_list.append(subject)
 
     # ego vehicle
@@ -81,14 +98,15 @@ def control():
     control.throttle = 0
     ego.apply_control(control)
     counter = 85
-
+    clock = pygame.time.Clock()
     while True:
+        clock.tick_busy_loop(60)
         cur_speed = get_speed(ego)
         print('Current Speed: ', cur_speed)
         world.tick()
         counter += 1
         if counter > 100:
-            control.throttle = 10
+            control.throttle = 1
         if counter > 200:
             control.steer = 0.25
         if counter > 209:
@@ -140,6 +158,7 @@ if __name__ == '__main__':
     subject.set_autopilot(True, tm_port)
     world.tick()
 
+    # import ipdb; ipdb.set_trace()
     try:
         control()
 
