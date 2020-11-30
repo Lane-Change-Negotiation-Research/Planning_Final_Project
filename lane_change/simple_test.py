@@ -126,9 +126,9 @@ if __name__ == '__main__':
         help='Synchronous mode execution')
     args = argparser.parse_args()
 
-    change_to_Town06()
     client = carla.Client(args.host, args.port)
     client.set_timeout(20.0)
+    change_to_Town06(client)
     world = client.get_world()
     initialize(world)
     ego, subject = spawn_vehicles()
