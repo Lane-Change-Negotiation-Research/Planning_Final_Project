@@ -7,6 +7,7 @@ import glob
 import os
 import sys
 import time
+import ipdb
 import numpy as np
 from util import (
     change_to_Town06,
@@ -19,6 +20,13 @@ from util import (
     get_ego_waypoint,
     update_spectator,
 )
+from agents.navigation.agent import Agent
+from agents.navigation.local_planner_behavior import LocalPlanner, RoadOption
+from agents.navigation.global_route_planner import GlobalRoutePlanner
+from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
+from agents.navigation.types_behavior import Cautious, Aggressive, Normal
+
+from agents.tools.misc import get_speed, positive
 
 try:
     sys.path.append(
@@ -45,6 +53,7 @@ from enum import Enum
 
 from PID_controller import VehiclePIDController
 from trajectory_generator import TrajGenerator, PoseTemp, PathFollower
+from path_predictor import PathPredictor
 
 
 class scenario_manager:
@@ -64,10 +73,12 @@ class scenario_manager:
             self.ego_vehicle,
             self.subject_vehicle,
             self.current_lane_waypoints,
+            self.subject_agent
         ) = setup_scenario(self.world, self.client, synchronous_master=True)
         update_spectator(self.world, self.ego_vehicle) #TODO: Spectator is buggy
 
-        # 2. #TODO: Create behavior control/ behavior generation capability for subject vehicle(s).
+        # #TODO: Create behavior control/ behavior generation capability for subject vehicle(s).
+        # The destination is set for the subject vehicle inside setup_scenario() function
 
         # 3. Coarse Trajectory Genertion #TODO: Wait for coarse trajectory generation capabilities to be built.
 
@@ -81,6 +92,11 @@ class scenario_manager:
         self.traj_to_track = []
 
         self.regenerate_traj_flag = False
+
+        # WIP: add path prediction module
+        dt = 0.5
+        self.path_predictor = PathPredictor(self.world, self.subject_agent, dt)
+
 
     def loop(self):
 
@@ -152,12 +168,34 @@ class scenario_manager:
                 pose_to_track.speed, pose_to_track
             )
 
-            # 4. Apply control signal on ego-vehicle (actuation)
+            # 4. Apply control signal on ego-vehicle and subject vehicle(actuation)
             self.ego_vehicle.apply_control(control_signal)
 
-        # 5. Send current state to coarse path prediction module
+        # 5. Predict the path of the suject agent
+        if(len(self.subject_agent.get_local_planner().waypoints_queue) != 0):
+            self.subject_vehicle.apply_control(self.subject_agent.run_step())
+            steps = 10
+            predictions = self.path_predictor.get_predicted_path(steps)
+            for i in range(len(predictions)):
+                self.world.debug.draw_string(
+                    predictions[i],
+                    "X",
+                    draw_shadow=False,
+                    color=carla.Color(r=0, g=0, b=255)
+                    
+                )
+        else:
+            control = carla.VehicleControl()
+            control.steer = 0.0
+            control.throttle = 0.0
+            control.brake = 1.0
+            control.hand_brake = False
+            control.manual_gear_shift = False
+            self.subject_vehicle.apply_control(control)
+                
+        # 6. Send current state to coarse path prediction module
 
-        # 6. Tick
+        #7. Tick
         self.world.tick()
 
     def play(self):

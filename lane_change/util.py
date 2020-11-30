@@ -10,7 +10,14 @@ from typing import List
 import time
 import random
 import re
+from agents.navigation.behavior_agent import BehaviorAgent
+from agents.navigation.agent import Agent
+from agents.navigation.local_planner_behavior import LocalPlanner, RoadOption
+from agents.navigation.global_route_planner import GlobalRoutePlanner
+from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
+from agents.navigation.types_behavior import Cautious, Aggressive, Normal
 
+from agents.tools.misc import get_speed, positive
 try:
     sys.path.append(glob.glob('/opt/CARLA_0.9.9.4/PythonAPI/carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -164,7 +171,7 @@ def setup_scenario(world, client, synchronous_master=False):
     blueprint.set_attribute("color", color)
     blueprint.set_attribute("role_name", "autopilot")
     batch.append(
-        SpawnActor(blueprint, sub_spawn_point).then(SetAutopilot(FutureActor, True))
+        SpawnActor(blueprint, sub_spawn_point).then(SetAutopilot(FutureActor, False))
     )
 
     # Ego Vehicle Details
@@ -193,6 +200,14 @@ def setup_scenario(world, client, synchronous_master=False):
     subject_vehicle = world.get_actors(vehicles_list)[
         0
     ]  # 0 because only 1 vehicle being spawned
+    # client.apply_batch_sync([SetAutopilot(subject_vehicle, False)], synchronous_master)
+    subject_agent = BehaviorAgent(subject_vehicle, behavior='normal')
+    destination = carla.Location(x=160.50791931152344, y=45.247249603271484, z=0.0)
+    # destination_wp = world.get_map().get_waypoint(subject_vehicle.get_location()).next_until_lane_end(10)[-1]
+    # destination = destination_wp.transform.location
+    subject_agent.set_destination(subject_agent.vehicle.get_location(), destination, clean=True)
+
+    subject_agent.update_information(world)
     ego_vehicle = world.get_actors([ego_vehicle_id])[0]
 
     print("Warm start initiated...")
@@ -205,6 +220,7 @@ def setup_scenario(world, client, synchronous_master=False):
             world.wait_for_tick()
 
     client.apply_batch_sync([SetAutopilot(ego_vehicle, False)], synchronous_master)
+
     print("Warm start finished...")
 
     ## Get current lane waypoints
@@ -223,7 +239,7 @@ def setup_scenario(world, client, synchronous_master=False):
     #         life_time=10,
     #     )
 
-    return (ego_vehicle, subject_vehicle, current_lane_waypoints)
+    return (ego_vehicle, subject_vehicle, current_lane_waypoints, subject_agent)
 
 
 def initialize(world, client):
