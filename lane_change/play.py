@@ -178,7 +178,7 @@ class scenario_manager:
             predictions = self.path_predictor.get_predicted_path(steps)
             for i in range(len(predictions)):
                 self.world.debug.draw_string(
-                    predictions[i],
+                    carla.Location(x=predictions[i][0], y=predictions[i][1], z=0),
                     "X",
                     draw_shadow=False,
                     color=carla.Color(r=0, g=0, b=255)

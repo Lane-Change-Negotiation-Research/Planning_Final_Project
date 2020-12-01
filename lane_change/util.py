@@ -154,9 +154,11 @@ def setup_scenario(world, client, synchronous_master=False):
 
     all_waypoints = world.get_map().generate_waypoints(3)
     waypoint_list_lane_sub = filter_waypoints(all_waypoints, 15, -5)
+    # waypoint_list_lane_sub = filter_waypoints(all_waypoints, 15, -3)
     waypoint_list_lane_ego = filter_waypoints(all_waypoints, 15, -6)
 
     sub_spawn_point = waypoint_list_lane_sub[1].transform
+    # sub_spawn_point = waypoint_list_lane_sub[8].transform
     sub_spawn_point = carla.Transform(
         Location(x=sub_spawn_point.location.x, y=sub_spawn_point.location.y, z=0.5),
         Rotation(yaw=sub_spawn_point.rotation.yaw),
@@ -210,6 +212,7 @@ def setup_scenario(world, client, synchronous_master=False):
     subject_agent = BehaviorAgent(subject_vehicle, behavior='normal')
     destination = carla.Location(x=160.50791931152344, y=45.247249603271484, z=0.0)
     # destination_wp = world.get_map().get_waypoint(subject_vehicle.get_location()).next_until_lane_end(10)[-1]
+    # destination_wp = destination_wp.next(40)[0]
     # destination = destination_wp.transform.location
     subject_agent.set_destination(subject_agent.vehicle.get_location(), destination, clean=True)
 
