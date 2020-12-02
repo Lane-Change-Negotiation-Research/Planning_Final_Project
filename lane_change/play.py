@@ -77,7 +77,7 @@ class scenario_manager:
             self.current_lane_waypoints,
             self.subject_agent
         ) = setup_scenario(self.world, self.client, synchronous_master=True)
-        update_spectator(self.world, self.ego_vehicle) #TODO: Spectator is buggy
+        # update_spectator(self.world, self.ego_vehicle) #TODO: Spectator is buggy
 
         # #TODO: Create behavior control/ behavior generation capability for subject vehicle(s).
         # The destination is set for the subject vehicle inside setup_scenario() function
@@ -89,7 +89,7 @@ class scenario_manager:
 
         # 3. Get the controller object
         args_lateral = {'K_P': 1.0, 'K_D': 0.0, 'K_I': 0.0, 'dt': self.time_step}
-        args_longitudinal = {'K_P': 1.0, 'K_D': 0.0, 'K_I': 0.0, 'dt': self.time_step}
+        args_longitudinal = {'K_P': 1.5, 'K_D': 0.0, 'K_I': 0.0, 'dt': self.time_step}
         self.controller = VehiclePIDController(self.ego_vehicle, args_lateral, args_longitudinal)
 
         # 4. Placeholder for the concatenated trajectory

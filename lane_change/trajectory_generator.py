@@ -101,9 +101,9 @@ class PlanGenerator:
 
         return [
             action.ACCELERATE,
-            # action.ACCELERATE,
-            # action.ACCELERATE,
-            # action.ACCELERATE,
+            action.ACCELERATE,
+            action.ACCELERATE,
+            action.ACCELERATE,
             action.ACCELERATE,
             action.SWITCH_LANE,
             action.ACCELERATE,
