@@ -220,7 +220,7 @@ def setup_scenario(world, client, synchronous_master=False):
 
     print("Warm start initiated...")
     warm_start_curr = 0
-    while warm_start_curr < 3.0:
+    while warm_start_curr < 2.2:
         warm_start_curr += world.get_settings().fixed_delta_seconds
         if synchronous_master:
             world.tick()
