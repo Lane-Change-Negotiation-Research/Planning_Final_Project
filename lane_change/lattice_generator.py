@@ -160,7 +160,7 @@ class CostCalculatorExtended:
 
     return (next_state.position[1] + initial_state.position[1])/2
 
-  def _cost_longitudianl_velocity(self, initial_state, next_state, v_horizon):
+  def _cost_longitudinal_velocity(self, initial_state, next_state, v_horizon):
 
     return v_horizon - (initial_state.speed + next_state.speed)/2
 
@@ -178,7 +178,7 @@ class CostCalculatorExtended:
 
       cost += self.weights[0] * self._cost_distance(initial_state, next_state)
       cost += self.weights[1] * self._cost_lateral_offset(initial_state, next_state)
-      cost += self.weights[2] * self._cost_longitudianl_velocity(initial_state, next_state, 60)
+      cost += self.weights[2] * self._cost_longitudinal_velocity(initial_state, next_state, 60)
       cost += self.weights[3] * self._cost_longitudinal_acceleration(initial_state, next_state)
 
     return cost
@@ -188,7 +188,7 @@ class CostCalculatorExtended:
     cost = 0
     cost += self.weights[0] * self._cost_distance(initial_state, next_state)
     cost += self.weights[1] * self._cost_lateral_offset(initial_state, next_state)
-    cost += self.weights[2] * self._cost_longitudianl_velocity(initial_state, next_state, 60)
+    cost += self.weights[2] * self._cost_longitudinal_velocity(initial_state, next_state, 60)
     cost += self.weights[3] * self._cost_longitudinal_acceleration(initial_state, next_state)
 
     return cost
@@ -203,7 +203,7 @@ class CostCalculatorExtended:
     
     return cost
 
-  def compute_obsticle_inflation_cost(self,initial_state,next_state,targets_state,targets_next_state):
+  def compute_obstacle_inflation_cost(self,initial_state,next_state,targets_state,targets_next_state):
 
     cost = 0
     lateral_offset_diff = abs(targets_next_state.position[1] - next_state.position[1])
