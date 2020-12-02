@@ -101,9 +101,9 @@ class PlanGenerator:
 
         return [
             action.ACCELERATE,
-            action.ACCELERATE,
-            action.ACCELERATE,
-            action.ACCELERATE,
+            # action.ACCELERATE,
+            # action.ACCELERATE,
+            # action.ACCELERATE,
             action.ACCELERATE,
             action.SWITCH_LANE,
             action.ACCELERATE,
@@ -191,12 +191,12 @@ class TrajGenerator:
         self.lane_width = get_ego_waypoint(world, ego_vehicle).lane_width
         self.lane_change_time = 4.5  # sec. Based on https://toledo.net.technion.ac.il/files/2012/12/TRR_ToledoZohar_07.pdf between 4~5 seconds
         self.lane_change_time_disc = (
-            0.1  # One pose per time disc for generated trajectories
+            0.05  # One pose per time disc for generated trajectories
         )
         # self.lane_change_length = math.sqrt((speed * self.lane_change_time_constant)**2. - self.lane_width**2.) # based on time and speed
         # self.lane_change_length = self.start_speed # Heuristic that approximates human lane change distance based on https://www.mchenrysoftware.com/board/viewtopic.php?t=339
 
-    def constTraj(self, starting_speed, starting_waypoint, k=10):
+    def constTraj(self, starting_speed, starting_waypoint, k=20):
         starting_speed = starting_speed / 3.6 # Change from km/hr to m/s
         sampling_radius = (
             starting_speed * self.traj_time / k
@@ -221,7 +221,7 @@ class TrajGenerator:
         # Returns the trajectory poses and the final waypoint for the next trajectory
         return traj_poses, last_waypoint
 
-    def accTraj(self, starting_speed, starting_waypoint, k=10):
+    def accTraj(self, starting_speed, starting_waypoint, k=20):
         starting_speed = starting_speed/3.6 # Change from km/hr to m/s
         last_waypoint = starting_waypoint
         traj_poses = []

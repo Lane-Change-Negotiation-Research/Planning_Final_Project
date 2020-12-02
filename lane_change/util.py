@@ -248,7 +248,7 @@ def setup_scenario(world, client, synchronous_master=False):
     return (ego_vehicle, subject_vehicle, current_lane_waypoints, subject_agent)
 
 
-def initialize(world, client):
+def initialize(world, client, time_step):
     actors = world.get_actors()
     client.apply_batch(
         [carla.command.DestroyActor(x) for x in actors if "vehicle" in x.type_id]
@@ -259,7 +259,7 @@ def initialize(world, client):
     world.tick()
     settings = world.get_settings()
     settings.synchronous_mode = True  # Enables synchronous mode
-    settings.fixed_delta_seconds = 0.03
+    settings.fixed_delta_seconds = time_step
     world.apply_settings(settings)
 
     print("Scene init done!")

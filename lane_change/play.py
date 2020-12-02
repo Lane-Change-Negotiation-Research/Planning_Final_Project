@@ -64,9 +64,11 @@ class scenario_manager:
 
         change_to_Town06(self.client)
         self.world = self.client.get_world()
+        self.time_step_count = 0
+        self.time_step = 0.05
 
         # 0. Reset Scene
-        initialize(self.world, self.client)
+        initialize(self.world, self.client, self.time_step)
 
         # 1. Spawn vehicles
         (
@@ -86,7 +88,9 @@ class scenario_manager:
         self.path_follower = PathFollower(self.world, self.ego_vehicle)
 
         # 3. Get the controller object
-        self.controller = VehiclePIDController(self.ego_vehicle)
+        args_lateral = {'K_P': 1.0, 'K_D': 0.0, 'K_I': 0.0, 'dt': self.time_step}
+        args_longitudinal = {'K_P': 1.0, 'K_D': 0.0, 'K_I': 0.0, 'dt': self.time_step}
+        self.controller = VehiclePIDController(self.ego_vehicle, args_lateral, args_longitudinal)
 
         # 4. Placeholder for the concatenated trajectory
         self.traj_to_track = []
@@ -129,9 +133,11 @@ class scenario_manager:
             self.regenerate_traj_flag = True
 
         # 3. Find next pose to track
-        pose_to_track, next_index = self.path_follower.findNextLanePose(
-            ego_pose, self.traj_to_track
-        )
+        # pose_to_track, next_index = self.path_follower.findNextLanePose(
+        #     ego_pose, self.traj_to_track
+        # )
+        next_index = self.time_step_count
+        pose_to_track = self.traj_to_track[next_index]
 
         # 3. Get control signal based on requested location + speed
         future_poses = self.traj_to_track[next_index:]
@@ -196,12 +202,13 @@ class scenario_manager:
         # 6. Send current state to coarse path prediction module
 
         #7. Tick
+        self.time_step_count += 1
+        print("Time: ", self.time_step_count*self.time_step)
         self.world.tick()
 
     def play(self):
 
         try:
-
             while True:
                 self.loop()
 
