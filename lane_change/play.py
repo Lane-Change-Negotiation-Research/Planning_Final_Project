@@ -88,8 +88,14 @@ class scenario_manager:
         self.path_follower = PathFollower(self.world, self.ego_vehicle)
 
         # 3. Get the controller object
-        args_lateral = {'K_P': 1.0, 'K_D': 0.0, 'K_I': 0.0, 'dt': self.time_step}
-        args_longitudinal = {'K_P': 1.0, 'K_D': 0.0, 'K_I': 0.0, 'dt': self.time_step}
+        args_lateral = {'K_P': 0.75,
+            'K_D': 0.02,
+            'K_I': 0.4,
+            'dt': self.time_step}
+        args_longitudinal = {'K_P': 1.0,
+            'K_D': 0.024,
+            'K_I': 0.032, 
+            'dt': self.time_step}
         self.controller = VehiclePIDController(self.ego_vehicle, args_lateral, args_longitudinal)
 
         # 4. Placeholder for the concatenated trajectory
@@ -133,11 +139,11 @@ class scenario_manager:
             self.regenerate_traj_flag = True
 
         # 3. Find next pose to track
-        pose_to_track, next_index = self.path_follower.findNextLanePose(
-            ego_pose, self.traj_to_track
-        )
-        # next_index = self.time_step_count
-        # pose_to_track = self.traj_to_track[next_index]
+        # pose_to_track, next_index = self.path_follower.findNextLanePose(
+        #     ego_pose, self.traj_to_track
+        # )
+        next_index = self.time_step_count
+        pose_to_track = self.traj_to_track[next_index]
 
         # 3. Get control signal based on requested location + speed
         future_poses = self.traj_to_track[next_index:]

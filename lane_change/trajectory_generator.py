@@ -107,7 +107,7 @@ class PlanGenerator:
             action.ACCELERATE,
             action.SWITCH_LANE,
             action.ACCELERATE,
-            action.DECELERATE,
+            action.DECELERATE
         ]
 
 
@@ -274,7 +274,7 @@ class TrajGenerator:
 
         return traj_poses, last_waypoint
 
-    def decTraj(self, starting_speed, starting_waypoint, k=10):
+    def decTraj(self, starting_speed, starting_waypoint, k=20):
         starting_speed = starting_speed/3.6 # Change from km/hr to m/s
         last_waypoint = starting_waypoint
         traj_poses = []
@@ -372,7 +372,7 @@ class TrajGenerator:
         # time loop
         time_disc = self.lane_change_time_disc
         total_loop_count = int(tf / time_disc + 1)
-        for i in range(total_loop_count):
+        for i in range(1, total_loop_count):
             t = i * time_disc
             x_value = ax * (t ** 3.0) + bx * (t ** 2.0) + cx * t + dx
             y_value = -(ay * (t ** 3.0) + by * (t ** 2.0) + cy * t + dy)
