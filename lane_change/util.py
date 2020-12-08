@@ -210,10 +210,12 @@ def setup_scenario(world, client, synchronous_master=False):
     subject_agent.update_information(world)
     ego_vehicle = world.get_actors([ego_vehicle_id])[0]
 
+    update_spectator(world, ego_vehicle)
+
     print("Warm start initiated...")
     warm_start_curr = 0
-    while warm_start_curr < 0:
-        warm_start_curr += 0.05
+    while warm_start_curr < 2.2:
+        warm_start_curr += world.get_settings().fixed_delta_seconds
         if synchronous_master:
             world.tick()
         else:
