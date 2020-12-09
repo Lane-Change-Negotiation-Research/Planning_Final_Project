@@ -11,16 +11,19 @@ class CollisionChecker:
         self.subject_path = None
         self.time_buffer = time
     
-    def predict_collision(self, ego_size, subject_size, ego_state):
-        collide = false
-        for sub_state in self.subject_path:
-            collide = check_collision(ego, subject, ego_state, sub_state)
+    def predict_collision(self, ego_size, subject_size, ego_state, subject_path):
+        collide = False
+        for sub_state in subject_path:
+            collide = self.check_collision(ego_size, subject_size, ego_state, sub_state)
         
+            if(collide):
+                break
+
         return collide
 
     def check_collision(self, ego_size, sub_size, ego_state, sub_state):
         if ego_state.time - sub_state.time > self.time_buffer:
-            return false
+            return False
 
         ego_rad = math.sqrt(pow(ego_size[0], 2) + pow(ego_size[1], 2))
         sub_rad = math.sqrt(pow(sub_size[0], 2) + pow(sub_size[1], 2))

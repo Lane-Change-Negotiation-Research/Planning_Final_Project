@@ -20,6 +20,7 @@ from util import (
     get_ego_waypoint,
     update_spectator,
 )
+from lattice_generator import LatticeGenerator, Road, Actions, Constraints, TerminationConditions, State, CostCalculator
 from agents.navigation.agent import Agent
 from agents.navigation.local_planner_behavior import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
@@ -65,27 +66,43 @@ class scenario_manager:
         change_to_Town06(self.client)
         self.world = self.client.get_world()
         self.time_step_count = 0
-        self.time_step = 0.05
+        self.time_step = 0.03
+        self.curr_time = 0
+        self.subject_path_time_res = 0.5
 
         # 0. Reset Scene
         initialize(self.world, self.client, self.time_step)
 
         # 1. Spawn vehicles
+        self.subject_behavior = "aggressive"
         (
             self.ego_vehicle,
             self.subject_vehicle,
             self.current_lane_waypoints,
             self.subject_agent
-        ) = setup_scenario(self.world, self.client, synchronous_master=True)
+        ) = setup_scenario(self.world, self.client, synchronous_master=True, subject_behavior=self.subject_behavior)
         update_spectator(self.world, self.ego_vehicle) #TODO: Spectator is buggy
-
-        # #TODO: Create behavior control/ behavior generation capability for subject vehicle(s).
-        # The destination is set for the subject vehicle inside setup_scenario() function
-
-        # 3. Coarse Trajectory Genertion #TODO: Wait for coarse trajectory generation capabilities to be built.
 
         # 2. Get the path follower object
         self.path_follower = PathFollower(self.world, self.ego_vehicle)
+
+        # 3. Coarse Trajectory Genertion #TODO: Wait for coarse trajectory generation capabilities to be built.
+        road = Road()
+        actions = Actions()
+        constraints = Constraints()
+        termination_conditions = TerminationConditions()
+        start_state = State([self.ego_vehicle.get_location().x,self.ego_vehicle.get_location().y], 0, 0)
+        cost_calculator = CostCalculator(subject_path_time_res=self.subject_path_time_res)
+        self.latticeGenerator = LatticeGenerator(road = road,\
+                                    actions = actions,\
+                                    constraints= constraints,\
+                                    cost_calculator = cost_calculator,\
+                                    termination_conditions=termination_conditions,\
+                                    start_state=start_state,\
+                                    ego=self.ego_vehicle,
+                                    subject=self.subject_vehicle
+                                    )
+
 
         # 3. Get the controller object
         args_lateral = {'K_P': 0.75,
@@ -104,43 +121,36 @@ class scenario_manager:
         self.regenerate_traj_flag = False
 
         # WIP: add path prediction module
-        dt = 0.5
-        self.path_predictor = PathPredictor(self.world, self.subject_agent, dt)
+        self.path_predictor = PathPredictor(self.world, self.subject_agent, self.subject_path_time_res)
 
 
     def loop(self):
 
         # 1. Get state estimation
         ego_transform = self.ego_vehicle.get_transform()
-        # ego_transform.rotation.yaw = ego_transform.rotation.yaw
-        # ego_speed = get_speed(self.ego_vehicle)
-        ego_pose = PoseTemp(
-            x=ego_transform.location.x,
-            y=ego_transform.location.y,
-            theta=ego_transform.rotation.yaw * np.pi / 180,
-            speed=get_speed(self.ego_vehicle),
-        )
+
+        ego_state = State(
+            [ego_transform.location.x, ego_transform.location.y],
+            get_speed(self.ego_vehicle),
+            self.curr_time)
 
         subject_transform = self.subject_vehicle.get_transform()
-        # subject_transform.rotation.yaw = ego_transform.rotation.yaw * np.pi / 180
-        # subject_speed = get_speed(self.subject_vehicle)
-        subject_pose = PoseTemp(
-            x=subject_transform.location.x,
-            y=subject_transform.location.y,
-            theta=subject_transform.rotation.yaw * np.pi / 180,
-            speed=get_speed(self.subject_vehicle),
-        )
+
+        subject_state = State(
+            [subject_transform.location.x, subject_transform.location.y],
+            get_speed(self.subject_vehicle),
+            self.curr_time)
 
         # 2. Get next plan to track.
         if self.regenerate_traj_flag == False:
             self.traj_to_track = self.path_follower.get_trajectory(
-                ego_pose.speed, get_ego_waypoint(self.world, self.ego_vehicle)
+                ego_state.speed, get_ego_waypoint(self.world, self.ego_vehicle)
             )
             self.regenerate_traj_flag = True
 
         # 3. Find next pose to track
         # pose_to_track, next_index = self.path_follower.findNextLanePose(
-        #     ego_pose, self.traj_to_track
+        #     ego_state, self.traj_to_track
         # )
         next_index = self.time_step_count
         pose_to_track = self.traj_to_track[next_index]
@@ -164,7 +174,7 @@ class scenario_manager:
                 "Speed Tracking:",
                 pose_to_track.speed,
                 "Speed current:",
-                ego_pose.speed,
+                ego_state.speed,
                 "Plan progress:",
                 float(next_index) / len(self.traj_to_track),
             )
@@ -183,47 +193,55 @@ class scenario_manager:
             # 4. Apply control signal on ego-vehicle and subject vehicle(actuation)
             self.ego_vehicle.apply_control(control_signal)
 
-        # 5. Predict the path of the suject agent
-        if(len(self.subject_agent.get_local_planner().waypoints_queue) != 0):
-            self.subject_vehicle.apply_control(self.subject_agent.run_step())
-            steps = 10
-            predictions = self.path_predictor.get_predicted_path(steps)
-            for i in range(len(predictions)):
-                self.world.debug.draw_string(
-                    carla.Location(x=predictions[i][0], y=predictions[i][1], z=0),,
-                    "X",
-                    draw_shadow=False,
-                    color=carla.Color(r=0, g=0, b=255)
-                    
-                )
-        else:
-            control = carla.VehicleControl()
-            control.steer = 0.0
-            control.throttle = 0.0
-            control.brake = 1.0
-            control.hand_brake = False
-            control.manual_gear_shift = False
-            self.subject_vehicle.apply_control(control)
-                
-        # 6. Send current state to coarse path prediction module
 
-        #7. Tick
+                
+        if(self.time_step_count%25):
+            # 5. Predict the path of the suject agent
+            subject_path = []
+            if(len(self.subject_agent.get_local_planner().waypoints_queue) != 0):
+                self.subject_vehicle.apply_control(self.subject_agent.run_step())
+                steps = 10
+                subject_path = self.path_predictor.get_predicted_path(steps)
+                for i in range(len(subject_path)):
+                    self.world.debug.draw_string(
+                        carla.Location(x=subject_path[i].position[0], y=subject_path[i].position[1], z=0),
+                        "X",
+                        draw_shadow=False,
+                        color=carla.Color(r=0, g=0, b=255)
+                        
+                    )
+            else:
+                control = carla.VehicleControl()
+                control.steer = 0.0
+                control.throttle = 0.0
+                control.brake = 1.0
+                control.hand_brake = False
+                control.manual_gear_shift = False
+                self.subject_vehicle.apply_control(control)            
+
+            # 6. Send current state to coarse path prediction module
+            full_lattice, state_2_cost = self.latticeGenerator.generate_full_lattice(ego_state, subject_path)        
+
+        #7. TODO: check for collision at every time step
+
+        #8. Tick
         self.time_step_count += 1
-        print("Time: ", self.time_step_count*self.time_step)
+        self.curr_time = self.time_step_count*self.time_step 
+        print("Time: ", self.curr_time)
         self.world.tick()
 
     def play(self):
 
-        try:
-            while True:
-                self.loop()
+        # try:
+        while True:
+            self.loop()
 
-        except:
+        # except:
 
-            for a in self.world.get_actors().filter("vehicle*"):
-                if a.is_alive:
-                    a.destroy()
-            reset_settings(self.world)
+        #     for a in self.world.get_actors().filter("vehicle*"):
+        #         if a.is_alive:
+        #             a.destroy()
+        #     reset_settings(self.world)
 
 
 if __name__ == "__main__":

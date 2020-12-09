@@ -131,7 +131,7 @@ def filter_waypoints(waypoints, road_id, lane_id=None):
     return filtered_waypoints
 
 
-def setup_scenario(world, client, synchronous_master=False):
+def setup_scenario(world, client, synchronous_master=False, subject_behavior="normal"):
 
     # @todo cannot import these directly.
     SpawnActor = carla.command.SpawnActor
@@ -203,7 +203,7 @@ def setup_scenario(world, client, synchronous_master=False):
         0
     ]  # 0 because only 1 vehicle being spawned
     # client.apply_batch_sync([SetAutopilot(subject_vehicle, False)], synchronous_master)
-    subject_agent = BehaviorAgent(subject_vehicle, behavior='normal')
+    subject_agent = BehaviorAgent(subject_vehicle, behavior=subject_behavior)
     destination = carla.Location(x=160.50791931152344, y=45.247249603271484, z=0.0)
     # destination_wp = world.get_map().get_waypoint(subject_vehicle.get_location()).next_until_lane_end(10)[-1]
     # destination_wp = destination_wp.next(40)[0]

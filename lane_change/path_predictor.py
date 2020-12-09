@@ -8,6 +8,7 @@ from time import time
 import numpy as np
 import carla
 import copy
+from lattice_generator import State
 
 class PathPredictor:
     def __init__(self, world, agent, dt):
@@ -78,8 +79,9 @@ class PathPredictor:
 
             new_t = self.t + (i+1)*dt
             # prediction -> [x, y, x_dot, y_dot, t]
-            prediction.append([new_loc.x, new_loc.y, state[2][0], state[3][0], new_t])
-            
+            speed = np.sqrt(state[2][0]**2 + state[3][0]**2)
+            # prediction.append([new_loc.x, new_loc.y, state[2][0], state[3][0], new_t])
+            prediction.append(State([new_loc.x, new_loc.y], speed, new_t))
             state=np.array([new_loc.x, new_loc.y, state[2][0], state[3][0], state[4][0], state[5][0]]).reshape(-1,1)
 
         return prediction
