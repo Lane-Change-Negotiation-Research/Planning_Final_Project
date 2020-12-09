@@ -226,6 +226,35 @@ class CostCalculatorExtended:
     
     return cost
 
+# assuming that you're passed in the state of the ego and subject at a certain timestep
+  def _cost_ttc(self, initial_state, subject_state):
+	# check that they're in the same lane
+	lateral_offset_diff = abs(targets_next_state.position[1] - next_state.position[1])
+	ttc = 0
+    if(lateral_offset_diff < 3): # need to remove hardcode
+      distance = _cost_distance(initial_state, subject_state)
+	  ttc = distance / subject_state.speed
+
+    return ttc
+
+# assuming that you're passed in the state of the ego and subject at a certain timestep
+  def _cost_delta_velocity(self, initial_state, subject_state):
+	# check that they're in the same lane
+	lateral_offset_diff = abs(targets_next_state.position[1] - next_state.position[1])
+	delta_velocity = 0
+    if(lateral_offset_diff < 3): # need to remove hardcode
+      distance = _cost_distance(initial_state, subject_state)
+	  ttc = distance / subject_state.speed
+	  # set an ideal ttc as 3 seconds and see how much the speed has to change
+	  ttc_ideal = 3 #taught in driving schools? but still hardcoded
+	  if (ttc < ttc_ideal):
+	  	ideal_speed = distance / ttc_ideal
+		# this number will be a negative number
+		delta_velocity = ideal_speed - subject_state.speed
+		# multiplying here to make it a positive cost associated with this change
+		delta_velocity *= -1
+    return delta_velocity
+
 
 class LatticeGenerator:
     
