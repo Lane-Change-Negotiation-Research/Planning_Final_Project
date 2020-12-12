@@ -312,6 +312,15 @@ def get_dummy_camera(world, ego_vehicle):
 
     return camera
 
+def getRightVector(rotation):
+    cy = np.cos(np.radians(rotation.yaw))
+    sy = np.sin(np.radians(rotation.yaw))
+    cr = np.cos(np.radians(rotation.roll))
+    sr = np.sin(np.radians(rotation.roll))
+    cp = np.cos(np.radians(rotation.pitch))
+    sp = np.sin(np.radians(rotation.pitch))
+    return carla.Vector3D(cy * sp * sr - sy * cr, sy * sp * sr + cy * cr, -cp * sr)
+
 
 def get_lane_marker_linestring_from_right_lane_road_and_lane_id(
     world, road_id, lane_id
@@ -335,8 +344,12 @@ def get_lane_marker_linestring_from_right_lane_road_and_lane_id(
     lane_marker_locations = []
     for wp in next_wps:
 
-        right_vector = wp.lane_width / 2 * wp.transform.get_right_vector()
-
+        # Rotate forward vector 90 degrees to get right vector
+        # temp_vector = wp.transform.get_forward_vector()
+        # x = temp_vector.x
+        # temp_vector.x = temp_vector.y
+        # temp_vector.y = -x
+        right_vector = wp.lane_width / 2 * getRightVector(wp.transform.rotation)
         lane_marker_location = Location(
             x=wp.transform.location.x + right_vector.x,
             y=wp.transform.location.y - right_vector.y,

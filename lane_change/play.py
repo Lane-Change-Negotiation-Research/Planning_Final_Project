@@ -77,7 +77,7 @@ class scenario_manager:
         change_to_Town06(self.client)
         self.world = self.client.get_world()
         self.time_step_count = 0
-        self.time_step = 0.03
+        self.time_step = 0.05
         self.curr_time = 0
         self.subject_path_time_res = 0.5
 
@@ -221,7 +221,7 @@ class scenario_manager:
                 ego_state_slvt, subject_path_slvt
             )
 
-            print(reverse_lattice)
+            # print(reverse_lattice)
 
             # 7. Get Best Goal States
 
@@ -253,6 +253,8 @@ class scenario_manager:
                 example_start_state_tuple,
             )
 
+            # planned_action_sequence = [0, 0, 0, 3, 2, 1]
+
             print(planned_action_sequence)
 
             # if self.regenerate_traj_flag == False:
@@ -264,11 +266,11 @@ class scenario_manager:
             # self.regenerate_traj_flag = True
 
         # 3. Find next pose to track
-        pose_to_track, next_index = self.path_follower.findNextLanePose(
-            eog_state_pose, self.traj_to_track
-        )
-        # next_index = self.time_step_count
-        # pose_to_track = self.traj_to_track[next_index]
+        # pose_to_track, next_index = self.path_follower.findNextLanePose(
+        #     eog_state_pose, self.traj_to_track
+        # )
+        next_index = self.time_step_count
+        pose_to_track = self.traj_to_track[next_index]
 
         # 3. Get control signal based on requested location + speed
         future_poses = self.traj_to_track[next_index:]
