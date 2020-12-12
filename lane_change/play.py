@@ -112,7 +112,7 @@ class scenario_manager:
         road = Road()
         actions = Actions()
         constraints = Constraints()
-        termination_conditions = TerminationConditions(max_time=20, max_position_x=100)
+        termination_conditions = TerminationConditions(max_time=40, max_position_x=100)
         start_state = State(
             [self.ego_vehicle.get_location().x, self.ego_vehicle.get_location().y], 0, 0
         )
@@ -210,7 +210,7 @@ class scenario_manager:
 
         # 2. Get next plan to track.
 
-        if self.time_step_count % 400 == 0:
+        if self.time_step_count % 200 == 0:
 
             # 6. Send current state to coarse path prediction module
             (

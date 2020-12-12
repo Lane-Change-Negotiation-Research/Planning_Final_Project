@@ -286,7 +286,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker()
+        self.collision_checker = CollisionChecker(3)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -380,6 +380,9 @@ class LatticeGenerator:
             for i, next_action_params in enumerate(self.actions.action_params_list):
 
                 if i == 3 and has_lane_change_happend:
+                    continue
+
+                if i == 2 and tmp_state.speed < 15:
                     continue
 
                 tmp_state = copy.deepcopy(curr_state)
