@@ -77,7 +77,7 @@ class scenario_manager:
         change_to_Town06(self.client)
         self.world = self.client.get_world()
         self.time_step_count = 0
-        self.time_step = 0.025 # Have to fully divide 1
+        self.time_step = 0.05 # Seconds. Have to fully divide 1
         self.curr_time = 0
         self.subject_path_time_res = 0.5
 
@@ -217,6 +217,7 @@ class scenario_manager:
                 full_lattice,
                 state_2_cost,
                 reverse_lattice,
+                goal_states
             ) = self.latticeGenerator.generate_full_lattice(
                 ego_state_slvt, subject_path_slvt
             )
@@ -227,14 +228,27 @@ class scenario_manager:
 
             # 8. Backtrack to get best path
 
-            tmp_list = [
-                key for key in reverse_lattice.keys() if key[-1] == 1 and key[0] > 50
-            ]
-            random.shuffle(tmp_list)
+            # tmp_list = [
+            #     key for key in reverse_lattice.keys() if key[-1] == 1 and key[0] > 50
+            # ]
+            # random.shuffle(tmp_list)
 
-            example_goal_state_tuple = tmp_list[
-                0
-            ]  # (108.22876211584432, 3.4, 12, 11.5, 1)
+            # example_goal_state_tuple = tmp_list[
+            #     0
+            # ]  # (108.22876211584432, 3.4, 12, 11.5, 1)
+
+            random.shuffle(goal_states)
+            example_goal_state_tuple = goal_states[0]
+
+            # min_cost = 2**31 # MAX_INT
+            # for goal_state in goal_states:
+            #     if state_2_cost[goal_state] < min_cost:
+            #         example_goal_state_tuple = goal_state
+            #     try:
+            #         print(state_2_cost[goal_state])
+            #     except:
+            #         print("error")
+
             example_start_state_tuple = (
                 ego_state_slvt.position[0],
                 ego_state_slvt.position[1],
@@ -254,7 +268,7 @@ class scenario_manager:
             )
 
             # Overwrite Trajectory for testing
-            planned_action_sequence = [0, 3, 0, 0]
+            # planned_action_sequence = [0, 3, 0, 0, 0]
 
             print(planned_action_sequence)
 

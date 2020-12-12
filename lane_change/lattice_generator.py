@@ -354,6 +354,7 @@ class LatticeGenerator:
             {}
         )  # (x,y,v,t,lane_change_status) -> {"action" -> next (x,y,v,t,lane_change_status)}
         state_2_cost = {}
+        goal_states = []
 
         queue = deque()
         queue.append((start_state, 0, 0))  # (state, has lane change happened, cost)
@@ -422,6 +423,9 @@ class LatticeGenerator:
                         tmp_state.time,
                         1,
                     )
+                    # Check if goal
+                    if (tmp_state.position[0] > 100):
+                        goal_states.append(tmp_state_tuple)
                 else:
                     tmp_state_tuple = (
                         tmp_state.position[0],
@@ -459,7 +463,7 @@ class LatticeGenerator:
                 else:
                     reverse_lattice[next_state] = {action: parent_state}
 
-        return lattice, state_2_cost, reverse_lattice
+        return lattice, state_2_cost, reverse_lattice, goal_states
 
     def backtrack_from_state(
         self, reverse_lattice, state_2_cost, end_state_tuple, start_state_tuple

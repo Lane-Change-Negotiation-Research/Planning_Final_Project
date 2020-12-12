@@ -230,7 +230,6 @@ class TrajGenerator:
 
     def accTraj(self, starting_speed, starting_waypoint):
         k = int(1/self.time_step)
-        print(k)
         starting_speed = starting_speed / 3.6  # Change from km/hr to m/s
         last_waypoint = starting_waypoint
         traj_poses = []
