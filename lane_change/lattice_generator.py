@@ -309,15 +309,15 @@ class LatticeGenerator:
             # 2.a T
             tmp_state.time += next_action_params["deltaT"]
 
-            # 2.b V
-            tmp_state.speed += next_action_params["deltaV"]
-            tmp_state.apply_constraints(self.constraints)
-
-            # 2.c D
+            # 2.b D
             tmp_state.position[0] += (
                 tmp_state.speed + next_action_params["deltaDDiff"][0]
             )
             tmp_state.position[1] += next_action_params["deltaDDiff"][1]
+            tmp_state.apply_constraints(self.constraints)
+
+            # 2.c V
+            tmp_state.speed += next_action_params["deltaV"]
             tmp_state.apply_constraints(self.constraints)
 
             # 3. Append to trajectory
@@ -387,15 +387,15 @@ class LatticeGenerator:
                 # a T
                 tmp_state.time += next_action_params["deltaT"]
 
-                # b V
-                tmp_state.speed += next_action_params["deltaV"]
-                tmp_state.apply_constraints(self.constraints)
-
-                # c D
+                # b D
                 tmp_state.position[0] += (
                     tmp_state.speed + next_action_params["deltaDDiff"][0]
                 )
                 tmp_state.position[1] += next_action_params["deltaDDiff"][1]
+                tmp_state.apply_constraints(self.constraints)
+
+                # c V
+                tmp_state.speed += next_action_params["deltaV"]
                 tmp_state.apply_constraints(self.constraints)
 
                 # Check collision
