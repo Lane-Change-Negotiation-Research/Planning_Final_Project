@@ -117,13 +117,13 @@ class PoseTemp:
 
 
 class PathFollower:
-    def __init__(self, world, ego_vehicle):
+    def __init__(self, world, ego_vehicle, time_step):
 
         self.SAME_POSE_THRESHOLD = 2
         self.SAME_POSE_LOWER_THRESHOLD = 0.02
 
         # self.plan_generator = PlanGenerator()
-        self.trajectory_generator = TrajGenerator(world, ego_vehicle)
+        self.trajectory_generator = TrajGenerator(world, ego_vehicle, time_step)
 
     # def _generate_plan(self):
 
@@ -185,8 +185,9 @@ class TrajGenerator:
     # SAME_POSE_THRESHOLD = 2
     # SAME_POSE_LOWER_THRESHOLD = 0.02
 
-    def __init__(self, world, ego_vehicle):
+    def __init__(self, world, ego_vehicle, time_step):
         self.world = world
+        self.time_step = time_step
         # self.ego = ego_vehicle
         # self.start_speed = speed  # m/s. The designed speed of starting lattice node instead of true speed
         self.a_max = 5  # m/s^2. Designed maximum acc
@@ -196,12 +197,13 @@ class TrajGenerator:
         self.lane_width = get_ego_waypoint(world, ego_vehicle).lane_width
         self.lane_change_time = 4.5  # sec. Based on https://toledo.net.technion.ac.il/files/2012/12/TRR_ToledoZohar_07.pdf between 4~5 seconds
         self.lane_change_time_disc = (
-            0.05  # One pose per time disc for generated trajectories
+            time_step  # One pose per time disc for generated trajectories
         )
         # self.lane_change_length = math.sqrt((speed * self.lane_change_time_constant)**2. - self.lane_width**2.) # based on time and speed
         # self.lane_change_length = self.start_speed # Heuristic that approximates human lane change distance based on https://www.mchenrysoftware.com/board/viewtopic.php?t=339
 
-    def constTraj(self, starting_speed, starting_waypoint, k=20):
+    def constTraj(self, starting_speed, starting_waypoint):
+        k = int(1/self.time_step)
         starting_speed = starting_speed / 3.6  # Change from km/hr to m/s
         sampling_radius = (
             starting_speed * self.traj_time / k
@@ -226,7 +228,9 @@ class TrajGenerator:
         # Returns the trajectory poses and the final waypoint for the next trajectory
         return traj_poses, last_waypoint
 
-    def accTraj(self, starting_speed, starting_waypoint, k=20):
+    def accTraj(self, starting_speed, starting_waypoint):
+        k = int(1/self.time_step)
+        print(k)
         starting_speed = starting_speed / 3.6  # Change from km/hr to m/s
         last_waypoint = starting_waypoint
         traj_poses = []
@@ -279,7 +283,8 @@ class TrajGenerator:
 
         return traj_poses, last_waypoint
 
-    def decTraj(self, starting_speed, starting_waypoint, k=20):
+    def decTraj(self, starting_speed, starting_waypoint):
+        k = int(1/self.time_step)
         starting_speed = starting_speed / 3.6  # Change from km/hr to m/s
         last_waypoint = starting_waypoint
         traj_poses = []

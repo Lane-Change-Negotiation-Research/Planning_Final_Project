@@ -77,7 +77,7 @@ class scenario_manager:
         change_to_Town06(self.client)
         self.world = self.client.get_world()
         self.time_step_count = 0
-        self.time_step = 0.05
+        self.time_step = 0.025 # Have to fully divide 1
         self.curr_time = 0
         self.subject_path_time_res = 0.5
 
@@ -106,7 +106,7 @@ class scenario_manager:
         update_spectator(self.world, self.ego_vehicle)  # TODO: Spectator is buggy
 
         # 2. Get the path follower object
-        self.path_follower = PathFollower(self.world, self.ego_vehicle)
+        self.path_follower = PathFollower(self.world, self.ego_vehicle, self.time_step)
 
         # 3. Coarse Trajectory Genertion
         road = Road()
@@ -210,7 +210,7 @@ class scenario_manager:
 
         # 2. Get next plan to track.
 
-        if self.time_step_count % 200 == 0:
+        if self.time_step_count % 400 == 0:
 
             # 6. Send current state to coarse path prediction module
             (
@@ -253,7 +253,8 @@ class scenario_manager:
                 example_start_state_tuple,
             )
 
-            # planned_action_sequence = [0, 0, 0, 3, 2, 1]
+            # Overwrite Trajectory for testing
+            planned_action_sequence = [0, 3, 0, 0]
 
             print(planned_action_sequence)
 
