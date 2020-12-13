@@ -112,7 +112,7 @@ class scenario_manager:
         road = Road()
         actions = Actions()
         constraints = Constraints()
-        termination_conditions = TerminationConditions(max_time=40, max_position_x=100)
+        termination_conditions = TerminationConditions(max_time=40, max_position_x=110)
         start_state = State(
             [self.ego_vehicle.get_location().x, self.ego_vehicle.get_location().y], 0, 0
         )
@@ -217,7 +217,7 @@ class scenario_manager:
                 full_lattice,
                 state_2_cost,
                 reverse_lattice,
-                goal_states
+                goal_state
             ) = self.latticeGenerator.generate_full_lattice(
                 ego_state_slvt, subject_path_slvt
             )
@@ -228,26 +228,8 @@ class scenario_manager:
 
             # 8. Backtrack to get best path
 
-            # tmp_list = [
-            #     key for key in reverse_lattice.keys() if key[-1] == 1 and key[0] > 50
-            # ]
-            # random.shuffle(tmp_list)
-
-            # example_goal_state_tuple = tmp_list[
-            #     0
-            # ]  # (108.22876211584432, 3.4, 12, 11.5, 1)
-
-            random.shuffle(goal_states)
-            example_goal_state_tuple = goal_states[0]
-
-            # min_cost = 2**31 # MAX_INT
-            # for goal_state in goal_states:
-            #     if state_2_cost[goal_state] < min_cost:
-            #         example_goal_state_tuple = goal_state
-            #     try:
-            #         print(state_2_cost[goal_state])
-            #     except:
-            #         print("error")
+            # random.shuffle(goal_states)
+            # example_goal_state_tuple = goal_states[0]
 
             example_start_state_tuple = (
                 ego_state_slvt.position[0],
@@ -263,7 +245,7 @@ class scenario_manager:
             ) = self.latticeGenerator.backtrack_from_state(
                 reverse_lattice,
                 state_2_cost,
-                example_goal_state_tuple,
+                goal_state,
                 example_start_state_tuple,
             )
 
