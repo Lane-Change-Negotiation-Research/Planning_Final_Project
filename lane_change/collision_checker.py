@@ -5,11 +5,11 @@ import numpy as np
 import math
 
 class CollisionChecker:
-    def __init__(self, lane_gap, time=1):
+    def __init__(self, lane_range, time=1):
 
         # self.lattice_graph = None
         self.subject_path = None
-        self.safe_lane_gap = lane_gap
+        self.same_lane_range = lane_range
         self.time_buffer = time
     
     def predict_collision(self, ego_size, subject_size, ego_state, subject_path, lane_change):
@@ -21,11 +21,11 @@ class CollisionChecker:
         #     print("Checking y")
 
         for sub_state in subject_path:
-            # print(sub_state.position[0], sub_state.position[1])
+            print(sub_state.position[0], sub_state.position[1])
             if lane_change:
                 collide = self.check_collision_radii(ego_size, subject_size, ego_state, sub_state)
             else:
-                collide = self.check_collision_y(ego_size, subject_size, ego_state, sub_state)
+                collide = self.check_collision_x(ego_size, subject_size, ego_state, sub_state)
         
             if(collide):
                 break
@@ -34,13 +34,18 @@ class CollisionChecker:
 
         return collide
 
-    def check_collision_y(self, ego_size, sub_size, ego_state, sub_state):
+    def check_collision_x(self, ego_size, sub_size, ego_state, sub_state):
         if abs(ego_state.time - sub_state.time) > self.time_buffer:
             return False
 
-        center_dist = abs(ego_state.position[1] - sub_state.position[1])
-        # print(center_dist, "; ", ego_state.position[1], "; ", sub_state.position[1])
-        return center_dist <= ego_size[1] + sub_size[1] + self.safe_lane_gap
+        horizontal_dist = abs(ego_state.position[1] - abs(sub_state.position[1]))
+        
+        if horizontal_dist > self.same_lane_range:
+            print("Different lanes: ", ego_state.position[1], sub_state.position[1])
+            return False
+        else:
+            print("Same lane, Collision:", abs(ego_state.position[0] - sub_state.position[0]) <= ego_size[0] + sub_size[0], ego_state.position[0], sub_state.position[0])
+            return abs(ego_state.position[0] - sub_state.position[0]) <= ego_size[0] + sub_size[0]
 
     def check_collision_radii(self, ego_size, sub_size, ego_state, sub_state):
         if abs(ego_state.time - sub_state.time) > self.time_buffer:

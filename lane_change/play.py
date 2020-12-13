@@ -210,7 +210,7 @@ class scenario_manager:
 
         # 2. Get next plan to track.
 
-        if self.time_step_count % 200 == 0:
+        if self.time_step_count % 50 == 0:
 
             # 6. Send current state to coarse path prediction module
             (
