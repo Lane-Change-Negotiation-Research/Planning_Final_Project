@@ -37,7 +37,7 @@ class Actions:
         self.acc_params = {"deltaT": 1, "deltaV": 3, "deltaDDiff": [1.5, 0]}
         self.const_params = {"deltaT": 1, "deltaV": 0, "deltaDDiff": [0, 0]}
         self.dec_params = {"deltaT": 1, "deltaV": -3, "deltaDDiff": [-1.5, 0]}
-        self.lane_change_params = {"deltaT": 4.5, "deltaV": 0, "deltaDDiff": [0, 3.5]}
+        self.lane_change_params = {"deltaT": 4.5, "deltaV": 0, "deltaDDiff": [0, -3.5]}
 
         self.action_params_list = [
             self.acc_params,
@@ -131,9 +131,9 @@ class CostCalculator:
 
     def _cost_longitudinal_acceleration(self, initial_state, next_state):
 
-        acc = abs(
-            next_state.speed - initial_state.speed
-        ) / 1  # DeltaT is 1. TODO: Remove hardcode
+        acc = (
+            abs(next_state.speed - initial_state.speed) / 1
+        )  # DeltaT is 1. TODO: Remove hardcode
 
         return acc
 
@@ -354,7 +354,7 @@ class LatticeGenerator:
             {}
         )  # (x,y,v,t,lane_change_status) -> {"action" -> next (x,y,v,t,lane_change_status)}
         state_2_cost = {}
-        goal_cost = 2**31
+        goal_cost = 2 ** 31
 
         queue = deque()
         queue.append((start_state, 0, 0))  # (state, has lane change happened, cost)
@@ -378,7 +378,11 @@ class LatticeGenerator:
             state_2_cost[curr_state_tuple] = cost
 
             # Find best goal state
-            if has_lane_change_happend and curr_state.position[0] > 100 and cost < goal_cost:
+            if (
+                has_lane_change_happend
+                and curr_state.position[0] > 100
+                and cost < goal_cost
+            ):
                 goal_state = curr_state_tuple
                 goal_cost = cost
 
