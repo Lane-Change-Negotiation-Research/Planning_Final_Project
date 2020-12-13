@@ -10,14 +10,6 @@ from typing import List, Tuple
 import time
 import random
 import re
-from agents.navigation.behavior_agent import BehaviorAgent
-from agents.navigation.agent import Agent
-from agents.navigation.local_planner_behavior import LocalPlanner, RoadOption
-from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
-from agents.navigation.types_behavior import Cautious, Aggressive, Normal
-
-from agents.tools.misc import get_speed, positive
 
 try:
     sys.path.append(
@@ -32,6 +24,15 @@ try:
     )
 except IndexError:
     pass
+    
+from agents.navigation.behavior_agent import BehaviorAgent
+from agents.navigation.agent import Agent
+from agents.navigation.local_planner_behavior import LocalPlanner, RoadOption
+from agents.navigation.global_route_planner import GlobalRoutePlanner
+from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
+from agents.navigation.types_behavior import Cautious, Aggressive, Normal
+
+from agents.tools.misc import get_speed, positive
 
 import carla
 from carla import Location, Rotation, Transform

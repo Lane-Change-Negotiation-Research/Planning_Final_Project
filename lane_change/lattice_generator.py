@@ -286,7 +286,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker(3)
+        self.collision_checker = CollisionChecker(0.4375, 3)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -418,7 +418,7 @@ class LatticeGenerator:
                 ]
 
                 if self.collision_checker.predict_collision(
-                    ego_size, subject_size, tmp_state, subject_path
+                    ego_size, subject_size, tmp_state, subject_path, i == 3
                 ):
                     print("Collision detected....................")
                     continue
