@@ -74,10 +74,10 @@ class scenario_manager:
         self.client = carla.Client("127.0.0.1", 2000)
         self.client.set_timeout(20.0)
 
-        change_to_Town06(self.client)
+        # change_to_Town06(self.client)
         self.world = self.client.get_world()
         self.time_step_count = 0
-        self.time_step = 0.05 # Seconds. Have to fully divide 1
+        self.time_step = 0.05  # Seconds. Have to fully divide 1
         self.curr_time = 0
         self.subject_path_time_res = 0.5
 
@@ -208,7 +208,7 @@ class scenario_manager:
             control.manual_gear_shift = False
             self.subject_vehicle.apply_control(control)
 
-        # 2. Get next plan to track.
+        # 2. Get next plan to track
 
         if self.time_step_count % 50 == 0:
 
@@ -217,7 +217,7 @@ class scenario_manager:
                 full_lattice,
                 state_2_cost,
                 reverse_lattice,
-                goal_state
+                goal_state,
             ) = self.latticeGenerator.generate_full_lattice(
                 ego_state_slvt, subject_path_slvt
             )
