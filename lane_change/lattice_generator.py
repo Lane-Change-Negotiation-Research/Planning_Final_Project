@@ -131,7 +131,7 @@ class CostCalculator:
 
     def _cost_longitudinal_acceleration(self, initial_state, next_state):
 
-        acc = (
+        acc = abs(
             next_state.speed - initial_state.speed
         ) / 1  # DeltaT is 1. TODO: Remove hardcode
 
