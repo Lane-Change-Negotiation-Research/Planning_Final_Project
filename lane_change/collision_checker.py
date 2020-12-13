@@ -25,7 +25,7 @@ class CollisionChecker:
             if lane_change:
                 collide = self.check_collision_radii(ego_size, subject_size, ego_state, sub_state)
             else:
-                collide = self.check_collision_y(ego_state, sub_state)
+                collide = self.check_collision_y(ego_size, subject_size, ego_state, sub_state)
         
             if(collide):
                 break
@@ -34,13 +34,13 @@ class CollisionChecker:
 
         return collide
 
-    def check_collision_y(self, ego_state, sub_state):
+    def check_collision_y(self, ego_size, sub_size, ego_state, sub_state):
         if abs(ego_state.time - sub_state.time) > self.time_buffer:
             return False
 
         center_dist = abs(ego_state.position[1] - sub_state.position[1])
         # print(center_dist, "; ", ego_state.position[1], "; ", sub_state.position[1])
-        return center_dist <= self.safe_lane_gap
+        return center_dist <= ego_size[1] + sub_size[1] + self.safe_lane_gap
 
     def check_collision_radii(self, ego_size, sub_size, ego_state, sub_state):
         if abs(ego_state.time - sub_state.time) > self.time_buffer:
