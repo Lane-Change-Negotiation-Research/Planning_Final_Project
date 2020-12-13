@@ -74,7 +74,7 @@ class scenario_manager:
         self.client = carla.Client("127.0.0.1", 2000)
         self.client.set_timeout(20.0)
 
-        # change_to_Town06(self.client)
+        change_to_Town06(self.client)
         self.world = self.client.get_world()
         self.time_step_count = 0
         self.time_step = 0.05  # Seconds. Have to fully divide 1
