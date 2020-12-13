@@ -20,14 +20,17 @@ class CollisionChecker:
         # else:
         #     print("Checking y")
 
+        # print("Ego:", ego_state.position[0], ego_state.position[1])
+
         for sub_state in subject_path:
-            print(sub_state.position[0], sub_state.position[1])
+            # print(sub_state.position[0], sub_state.position[1])
             if lane_change:
                 collide = self.check_collision_radii(ego_size, subject_size, ego_state, sub_state)
             else:
                 collide = self.check_collision_x(ego_size, subject_size, ego_state, sub_state)
         
             if(collide):
+                # print("Collision found")
                 break
 
         # print("Collide: ", collide)
@@ -38,17 +41,18 @@ class CollisionChecker:
         if abs(ego_state.time - sub_state.time) > self.time_buffer:
             return False
 
-        horizontal_dist = abs(ego_state.position[1] - abs(sub_state.position[1]))
+        horizontal_dist = abs(ego_state.position[1] - sub_state.position[1])
         
         if horizontal_dist > self.same_lane_range:
-            print("Different lanes: ", ego_state.position[1], sub_state.position[1])
+            # print("Different lanes: ", ego_state.position[1], sub_state.position[1])
             return False
         else:
-            print("Same lane, Collision:", abs(ego_state.position[0] - sub_state.position[0]) <= ego_size[0] + sub_size[0], ego_state.position[0], sub_state.position[0])
+            # print("Same lane, Collision:", abs(ego_state.position[0] - sub_state.position[0]) <= ego_size[0] + sub_size[0], ego_state.position[0], sub_state.position[0])
             return abs(ego_state.position[0] - sub_state.position[0]) <= ego_size[0] + sub_size[0]
 
     def check_collision_radii(self, ego_size, sub_size, ego_state, sub_state):
         if abs(ego_state.time - sub_state.time) > self.time_buffer:
+            # print("Time gap", ego_state.time, sub_state.time)
             return False
 
         ego_rad = math.sqrt(pow(ego_size[0], 2) + pow(ego_size[1], 2))
