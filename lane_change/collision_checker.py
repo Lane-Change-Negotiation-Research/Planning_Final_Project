@@ -5,29 +5,60 @@ import numpy as np
 import math
 
 class CollisionChecker:
-    def __init__(self, time=1):
+    def __init__(self, lane_range, time=1):
 
         # self.lattice_graph = None
         self.subject_path = None
+        self.same_lane_range = lane_range
         self.time_buffer = time
     
-    def predict_collision(self, ego_size, subject_size, ego_state, subject_path):
+    def predict_collision(self, ego_size, subject_size, ego_state, subject_path, lane_change):
         collide = False
+
+        # if lane_change:
+        #     print("Checking radii")
+        # else:
+        #     print("Checking y")
+
+        # print("Ego:", ego_state.position[0], ego_state.position[1])
+
         for sub_state in subject_path:
-            collide = self.check_collision(ego_size, subject_size, ego_state, sub_state)
+            # print(sub_state.position[0], sub_state.position[1])
+            if lane_change:
+                collide = self.check_collision_radii(ego_size, subject_size, ego_state, sub_state)
+            else:
+                collide = self.check_collision_x(ego_size, subject_size, ego_state, sub_state)
         
             if(collide):
+                # print("Collision found")
                 break
+
+        # print("Collide: ", collide)
 
         return collide
 
-    def check_collision(self, ego_size, sub_size, ego_state, sub_state):
-        if ego_state.time - sub_state.time > self.time_buffer:
+    def check_collision_x(self, ego_size, sub_size, ego_state, sub_state):
+        if abs(ego_state.time - sub_state.time) > self.time_buffer:
+            return False
+
+        horizontal_dist = abs(ego_state.position[1] - sub_state.position[1])
+        
+        if horizontal_dist > self.same_lane_range:
+            # print("Different lanes: ", ego_state.position[1], sub_state.position[1])
+            return False
+        else:
+            # print("Same lane, Collision:", abs(ego_state.position[0] - sub_state.position[0]) <= ego_size[0] + sub_size[0], ego_state.position[0], sub_state.position[0])
+            return abs(ego_state.position[0] - sub_state.position[0]) <= ego_size[0] + sub_size[0]
+
+    def check_collision_radii(self, ego_size, sub_size, ego_state, sub_state):
+        if abs(ego_state.time - sub_state.time) > self.time_buffer:
+            # print("Time gap", ego_state.time, sub_state.time)
             return False
 
         ego_rad = math.sqrt(pow(ego_size[0], 2) + pow(ego_size[1], 2))
         sub_rad = math.sqrt(pow(sub_size[0], 2) + pow(sub_size[1], 2))
         center_dist = math.sqrt(pow(ego_state.position[0] - sub_state.position[0], 2) + pow(ego_state.position[1] - sub_state.position[1], 2))
+        # print(center_dist, "; ", ego_state.position[0], ego_state.position[1], "; ", sub_state.position[0], sub_state.position[1])
         return center_dist <= ego_rad + sub_rad
 
     # def update_lattice(self, lattice_graph):

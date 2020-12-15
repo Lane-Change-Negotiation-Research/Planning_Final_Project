@@ -286,7 +286,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker(3)
+        self.collision_checker = CollisionChecker(1.75, 3)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -349,6 +349,9 @@ class LatticeGenerator:
         return random_trajectory
 
     def generate_full_lattice(self, start_state, subject_path):
+        # print("Ego Current:", start_state.position[0], start_state.position[1])
+        # for sub_state in subject_path:
+        #     print("Subject:", sub_state.position[0], sub_state.position[1])
 
         lattice = (
             {}
@@ -422,7 +425,7 @@ class LatticeGenerator:
                 ]
 
                 if self.collision_checker.predict_collision(
-                    ego_size, subject_size, tmp_state, subject_path
+                    ego_size, subject_size, tmp_state, subject_path, i == 3
                 ):
                     print("Collision detected....................")
                     continue
