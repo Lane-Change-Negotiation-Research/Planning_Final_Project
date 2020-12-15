@@ -15,7 +15,7 @@ import numpy as np
 import carla
 
 
-class VehiclePIDController():
+class VehiclePIDController:
     """
     VehiclePIDController is the combination of two PID controllers (lateral and longitudinal) to perform the
     low level control a vehicle from client side
@@ -35,16 +35,16 @@ class VehiclePIDController():
                              K_I -- Integral term
         """
         if not args_lateral:
-            args_lateral = {'K_P': 1.0, 'K_D': 0.0, 'K_I': 0.0}
+            args_lateral = {"K_P": 1.0, "K_D": 0.0, "K_I": 0.0}
         if not args_longitudinal:
-            args_longitudinal = {'K_P': 1.0, 'K_D': 0.0, 'K_I': 0.0}
+            args_longitudinal = {"K_P": 1.0, "K_D": 0.0, "K_I": 0.0}
 
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
         self._lon_controller = PIDLongitudinalController(
-            self._vehicle, **args_longitudinal)
-        self._lat_controller = PIDLateralController(
-            self._vehicle, **args_lateral)
+            self._vehicle, **args_longitudinal
+        )
+        self._lat_controller = PIDLateralController(self._vehicle, **args_lateral)
 
     def run_step(self, target_speed, pose) -> carla.VehicleControl:
         """
@@ -69,7 +69,7 @@ class VehiclePIDController():
         return control
 
 
-class PIDLongitudinalController():
+class PIDLongitudinalController:
     """
     PIDLongitudinalController implements longitudinal control using a PID.
     """
@@ -95,10 +95,10 @@ class PIDLongitudinalController():
         :param target_speed: target speed in Km/h
         :return: throttle control in the range [0, 1]
         """
-        current_speed = get_speed(self._vehicle)
+        current_speed = get_speed(self._vehicle) * 3.6
 
         if debug:
-            print('Current speed = {}'.format(current_speed))
+            print("Current speed = {}".format(current_speed))
 
         return self._pid_control(target_speed, current_speed)
 
@@ -110,7 +110,7 @@ class PIDLongitudinalController():
         :return: throttle control in the range [0, 1]
         """
         # print("Planned Speed", target_speed, ", Current Speed:", current_speed)
-        _e = (target_speed - current_speed)
+        _e = target_speed - current_speed
         self._e_buffer.append(_e)
 
         if len(self._e_buffer) >= 2:
@@ -120,10 +120,16 @@ class PIDLongitudinalController():
             _de = 0.0
             _ie = 0.0
 
-        return np.clip((self._K_P * _e) + (self._K_D * _de / self._dt) + (self._K_I * _ie * self._dt), 0.0, 1.0)
+        return np.clip(
+            (self._K_P * _e)
+            + (self._K_D * _de / self._dt)
+            + (self._K_I * _ie * self._dt),
+            0.0,
+            1.0,
+        )
 
 
-class PIDLateralController():
+class PIDLateralController:
     """
     PIDLateralController implements lateral control using a PID.
     """
@@ -161,17 +167,22 @@ class PIDLateralController():
         :return: steering control in the range [-1, 1]
         """
         v_begin = vehicle_transform.location
-        v_end = v_begin + carla.Location(x=math.cos(math.radians(vehicle_transform.rotation.yaw)),
-                                         y=math.sin(math.radians(vehicle_transform.rotation.yaw)))
+        v_end = v_begin + carla.Location(
+            x=math.cos(math.radians(vehicle_transform.rotation.yaw)),
+            y=math.sin(math.radians(vehicle_transform.rotation.yaw)),
+        )
 
         v_vec = np.array([v_end.x - v_begin.x, v_end.y - v_begin.y, 0.0])
-        w_vec = np.array([pose.x -
-                          v_begin.x, pose.y -
-                          v_begin.y, 0.0])
+        w_vec = np.array([pose.x - v_begin.x, pose.y - v_begin.y, 0.0])
         # print("v_vec:", v_vec)
         # print("w_vec:", w_vec)
-        _dot = math.acos(np.clip(np.dot(w_vec, v_vec) /
-                                 (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)), -1.0, 1.0))
+        _dot = math.acos(
+            np.clip(
+                np.dot(w_vec, v_vec) / (np.linalg.norm(w_vec) * np.linalg.norm(v_vec)),
+                -1.0,
+                1.0,
+            )
+        )
 
         _cross = np.cross(v_vec, w_vec)
         if _cross[2] < 0:
@@ -187,4 +198,10 @@ class PIDLateralController():
 
         # print("P Error:", _dot)
 
-        return np.clip((self._K_P * _dot) + (self._K_D * _de / self._dt) + (self._K_I * _ie * self._dt), -1.0, 1.0)
+        return np.clip(
+            (self._K_P * _dot)
+            + (self._K_D * _de / self._dt)
+            + (self._K_I * _ie * self._dt),
+            -1.0,
+            1.0,
+        )

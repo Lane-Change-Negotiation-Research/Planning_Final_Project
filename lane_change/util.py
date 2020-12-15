@@ -24,7 +24,7 @@ try:
     )
 except IndexError:
     pass
-    
+
 from agents.navigation.behavior_agent import BehaviorAgent
 from agents.navigation.agent import Agent
 from agents.navigation.local_planner_behavior import LocalPlanner, RoadOption
@@ -70,11 +70,11 @@ def get_speed(vehicle):
     """
     Compute speed of a vehicle in Km/h.
         :param vehicle: the vehicle for which speed is calculated
-        :return: speed as a float in Km/h
+        :return: speed as a float in m/s
     """
     vel = vehicle.get_velocity()
 
-    return 3.6 * math.sqrt(vel.x ** 2 + vel.y ** 2 + vel.z ** 2)
+    return math.sqrt(vel.x ** 2 + vel.y ** 2 + vel.z ** 2)
 
 
 def draw_road_lane(world, road_id, lane_id=None, color=[0, 255, 0]):
@@ -183,7 +183,7 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     blueprint.set_attribute("color", color)
     blueprint.set_attribute("role_name", "autopilot")
     batch.append(
-        SpawnActor(blueprint, sub_spawn_point).then(SetAutopilot(FutureActor, False))
+        SpawnActor(blueprint, sub_spawn_point).then(SetAutopilot(FutureActor, True))
     )
 
     # Ego Vehicle Details
@@ -213,19 +213,10 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
         0
     ]  # 0 because only 1 vehicle being spawned
     # client.apply_batch_sync([SetAutopilot(subject_vehicle, False)], synchronous_master)
-    subject_agent = BehaviorAgent(subject_vehicle, behavior=subject_behavior)
-    destination = carla.Location(x=160.50791931152344, y=45.247249603271484, z=0.0)
-    # destination_wp = world.get_map().get_waypoint(subject_vehicle.get_location()).next_until_lane_end(10)[-1]
-    # destination_wp = destination_wp.next(40)[0]
-    # destination = destination_wp.transform.location
-    subject_agent.set_destination(
-        subject_agent.vehicle.get_location(), destination, clean=True
-    )
 
-    subject_agent.update_information(world)
     ego_vehicle = world.get_actors([ego_vehicle_id])[0]
 
-    update_spectator(world, ego_vehicle)
+    # update_spectator(world, ego_vehicle)
 
     print("Warm start initiated...")
     warm_start_curr = 0
@@ -237,6 +228,18 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
             world.wait_for_tick()
 
     client.apply_batch_sync([SetAutopilot(ego_vehicle, False)], synchronous_master)
+    client.apply_batch_sync([SetAutopilot(subject_vehicle, False)], synchronous_master)
+
+    subject_agent = BehaviorAgent(subject_vehicle, behavior=subject_behavior)
+    destination = carla.Location(x=190.50791931152344, y=45.247249603271484, z=0.0)
+    # destination_wp = world.get_map().get_waypoint(subject_vehicle.get_location()).next_until_lane_end(10)[-1]
+    # destination_wp = destination_wp.next(40)[0]
+    # destination = destination_wp.transform.location
+    subject_agent.set_destination(
+        subject_agent.vehicle.get_location(), destination, clean=True
+    )
+
+    subject_agent.update_information(world)
 
     print("Warm start finished...")
 
@@ -288,8 +291,8 @@ def update_spectator(world, ego_vehicle):
     spectator = world.get_spectator()
     spectator_transform = ego_vehicle.get_transform()
     spectator_transform = carla.Transform(
-        spectator_transform.location + carla.Location(x=0, y=0, z=10.0),
-        carla.Rotation(pitch=-45),
+        spectator_transform.location + carla.Location(x=-15.5, z=8.5),
+        carla.Rotation(pitch=-10.0),
     )
     spectator.set_transform(spectator_transform)
 
@@ -312,6 +315,7 @@ def get_dummy_camera(world, ego_vehicle):
     # camera_parent_vehicle = ego_vehicle
 
     return camera
+
 
 def getRightVector(rotation):
     cy = np.cos(np.radians(rotation.yaw))

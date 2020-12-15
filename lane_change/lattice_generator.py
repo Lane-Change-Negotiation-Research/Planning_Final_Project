@@ -62,8 +62,8 @@ class Actions:
 class Constraints:
     def __init__(
         self,
-        max_v=45,
-        min_v=12,
+        max_v=16.5,
+        min_v=7.333,
         max_position_x=10000,
         max_position_y=3.4,
         min_position_y=-3.4,
@@ -99,6 +99,19 @@ class State:
         ):
             return 1
         return 0
+
+    def __str__(self):
+        return (
+            "("
+            + str(self.position[0])
+            + ","
+            + str(self.position[1])
+            + ","
+            + str(self.speed)
+            + ","
+            + str(self.time)
+            + ")"
+        )
 
 
 class TerminationConditions:
@@ -161,7 +174,7 @@ class CostCalculator:
     ):
 
         cost = 0
-        cost += self.weights[0] * self._cost_distance(initial_state, next_state)
+        # cost += self.weights[0] * self._cost_distance(initial_state, next_state)
         # cost += self.weights[1] * self._cost_lateral_offset(initial_state, next_state)
         # cost += self.weights[2] * self._cost_longitudianl_velocity(initial_state, next_state, 60)
         # cost += self.weights[3] * self._cost_longitudinal_acceleration(initial_state, next_state)
@@ -169,7 +182,7 @@ class CostCalculator:
         targets_next_state = subject_path[
             int(action_params["deltaT"] / self.subject_path_time_res)
         ]
-        # cost += self.compute_speed_limit_cost(next_state, targets_next_state)
+        cost += self.compute_speed_limit_cost(next_state, targets_next_state)
         # cost += self.compute_obstacle_inflation_cost(next_state, targets_next_state)
         # cost += self.compute_blindspot_cost(next_state, targets_next_state)
         # cost += self._cost_ttc(initial_state, next_state, targets_next_state)
@@ -181,7 +194,7 @@ class CostCalculator:
         cost = 0
         abs_diff = abs(targets_next_state.speed - next_state.speed)
         cost_diff = (
-            15  # TODO: Remove hardcode 15 m/s above or below speed of other car is bad
+            3  # TODO: Remove hardcode 15 m/s above or below speed of other car is bad
         )
         if abs_diff > cost_diff:
             cost += self.weights[2] * abs_diff - cost_diff
@@ -237,7 +250,7 @@ class CostCalculator:
         else:
             distance = 10000.0  # TODO: some high value, anjali check please
         ttc = distance / targets_next_state.speed
-        cost_ttc = 1.0 / ttc
+        cost_ttc = 1 / ttc
 
         return cost_ttc
 
@@ -286,7 +299,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker(1.75, 3)
+        self.collision_checker = CollisionChecker(1.75, 1)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -348,7 +361,44 @@ class LatticeGenerator:
 
         return random_trajectory
 
-    def generate_full_lattice(self, start_state, subject_path):
+    def check_dense_collision_for_lane_change(
+        self,
+        start_state,
+        end_state,
+        subject_path,
+        action_params,
+        ego_size,
+        subject_size,
+        num_points=10,
+    ):
+
+        start_x = start_state.position[0]
+        start_y = start_state.position[1]
+
+        end_x = end_state.position[0]
+        end_y = end_state.position[1]
+
+        x_points = np.linspace(start_x, end_x, num_points)
+        y_points = np.linspace(start_y, end_y, num_points)
+
+        time_points = np.linspace(start_state.time, end_state.time, num_points)
+
+        for i in range(len(time_points)):
+
+            intermediate_state = State(
+                position=[x_points[i], y_points[i]],
+                speed=start_state.speed,
+                time=time_points[i],
+            )
+
+            if self.collision_checker.predict_collision(
+                ego_size, subject_size, intermediate_state, subject_path, True
+            ):
+                return True
+
+        return False
+
+    def generate_full_lattice(self, start_state, subject_path, lane_change_init_flag):
         # print("Ego Current:", start_state.position[0], start_state.position[1])
         # for sub_state in subject_path:
         #     print("Subject:", sub_state.position[0], sub_state.position[1])
@@ -359,8 +409,13 @@ class LatticeGenerator:
         state_2_cost = {}
         goal_cost = 2 ** 31
 
+        start_state
+
         queue = deque()
-        queue.append((start_state, 0, 0))  # (state, has lane change happened, cost)
+        queue.append(
+            (start_state, lane_change_init_flag, 0)
+        )  # (state, has lane change happened, cost)
+        goal_state = None
         while len(queue) != 0:
 
             curr_state, has_lane_change_happend, cost = queue.popleft()
@@ -383,7 +438,7 @@ class LatticeGenerator:
             # Find best goal state
             if (
                 has_lane_change_happend
-                and curr_state.position[0] > 100
+                and curr_state.position[0] > 120
                 and cost < goal_cost
             ):
                 goal_state = curr_state_tuple
@@ -394,9 +449,6 @@ class LatticeGenerator:
                 if i == 3 and has_lane_change_happend:
                     continue
 
-                if i == 2 and tmp_state.speed < 15:
-                    continue
-
                 tmp_state = copy.deepcopy(curr_state)
 
                 # Apply action + constraints
@@ -404,15 +456,21 @@ class LatticeGenerator:
                 tmp_state.time += next_action_params["deltaT"]
 
                 # b D
-                tmp_state.position[0] += (
-                    tmp_state.speed + next_action_params["deltaDDiff"][0]
-                )
+                if i != 3:
+                    tmp_state.position[0] += (
+                        tmp_state.speed + next_action_params["deltaDDiff"][0]
+                    )
+                else:
+                    tmp_state.position[0] += tmp_state.speed * 4.5
                 tmp_state.position[1] += next_action_params["deltaDDiff"][1]
                 tmp_state.apply_constraints(self.constraints)
 
                 # c V
                 tmp_state.speed += next_action_params["deltaV"]
                 tmp_state.apply_constraints(self.constraints)
+
+                if i == 2 and tmp_state.speed < 8:
+                    continue
 
                 # Check collision
                 ego_size = [
@@ -424,11 +482,23 @@ class LatticeGenerator:
                     self.subject_vehicle.bounding_box.extent.y,
                 ]
 
-                if self.collision_checker.predict_collision(
-                    ego_size, subject_size, tmp_state, subject_path, i == 3
-                ):
-                    print("Collision detected....................")
-                    continue
+                if i == 3:
+                    if self.check_dense_collision_for_lane_change(
+                        curr_state,
+                        tmp_state,
+                        subject_path,
+                        next_action_params,
+                        ego_size,
+                        subject_size,
+                    ):
+                        print("Dense Collision detected....................")
+                        continue
+                else:
+                    if self.collision_checker.predict_collision(
+                        ego_size, subject_size, tmp_state, subject_path, i == 3
+                    ):
+                        print("Lane Collision detected....................")
+                        continue
 
                 if i == 3 or has_lane_change_happend:
                     tmp_state_tuple = (

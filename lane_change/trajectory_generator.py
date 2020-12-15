@@ -134,6 +134,7 @@ class PathFollower:
         # next_actions = self._generate_plan()
 
         concatenated_trajectory = []
+        lane_switch_flags = []
 
         speed = copy.deepcopy(starting_speed)
         waypoint = starting_waypoint
@@ -165,8 +166,12 @@ class PathFollower:
                 waypoint = last_waypoint
 
             concatenated_trajectory += traj_poses
+            if next_action == action.SWITCH_LANE:
+                lane_switch_flags += [1 for i in range(len(traj_poses))]
+            else:
+                lane_switch_flags += [0 for i in range(len(traj_poses))]
 
-        return concatenated_trajectory
+        return concatenated_trajectory, lane_switch_flags
 
     def findNextLanePose(self, cur_vehicle_pose, traj_poses):
         way_pose = traj_poses[0]
@@ -203,7 +208,7 @@ class TrajGenerator:
         # self.lane_change_length = self.start_speed # Heuristic that approximates human lane change distance based on https://www.mchenrysoftware.com/board/viewtopic.php?t=339
 
     def constTraj(self, starting_speed, starting_waypoint):
-        k = int(1/self.time_step)
+        k = int(1 / self.time_step)
         starting_speed = starting_speed / 3.6  # Change from km/hr to m/s
         sampling_radius = (
             starting_speed * self.traj_time / k
@@ -229,7 +234,7 @@ class TrajGenerator:
         return traj_poses, last_waypoint
 
     def accTraj(self, starting_speed, starting_waypoint):
-        k = int(1/self.time_step)
+        k = int(1 / self.time_step)
         starting_speed = starting_speed / 3.6  # Change from km/hr to m/s
         last_waypoint = starting_waypoint
         traj_poses = []
@@ -283,7 +288,7 @@ class TrajGenerator:
         return traj_poses, last_waypoint
 
     def decTraj(self, starting_speed, starting_waypoint):
-        k = int(1/self.time_step)
+        k = int(1 / self.time_step)
         starting_speed = starting_speed / 3.6  # Change from km/hr to m/s
         last_waypoint = starting_waypoint
         traj_poses = []
