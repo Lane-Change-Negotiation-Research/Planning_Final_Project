@@ -63,7 +63,7 @@ class Constraints:
     def __init__(
         self,
         max_v=16.5,
-        min_v=7.333,
+        min_v=6.333,
         max_position_x=10000,
         max_position_y=3.4,
         min_position_y=-3.4,
@@ -174,10 +174,14 @@ class CostCalculator:
     ):
 
         cost = 0
-        # cost += self.weights[0] * self._cost_distance(initial_state, next_state)
+        cost += self.weights[0] * self._cost_distance(initial_state, next_state)
         # cost += self.weights[1] * self._cost_lateral_offset(initial_state, next_state)
-        # cost += self.weights[2] * self._cost_longitudianl_velocity(initial_state, next_state, 60)
-        # cost += self.weights[3] * self._cost_longitudinal_acceleration(initial_state, next_state)
+        # cost += self.weights[2] * self._cost_longitudianl_velocity(
+        #     initial_state, next_state, 60
+        # )
+        cost += self.weights[3] * self._cost_longitudinal_acceleration(
+            initial_state, next_state
+        )
 
         targets_next_state = subject_path[
             int(action_params["deltaT"] / self.subject_path_time_res)
@@ -461,7 +465,7 @@ class LatticeGenerator:
                         tmp_state.speed + next_action_params["deltaDDiff"][0]
                     )
                 else:
-                    tmp_state.position[0] += tmp_state.speed * 4.5
+                    tmp_state.position[0] += tmp_state.speed * 3.6
                 tmp_state.position[1] += next_action_params["deltaDDiff"][1]
                 tmp_state.apply_constraints(self.constraints)
 
@@ -469,7 +473,7 @@ class LatticeGenerator:
                 tmp_state.speed += next_action_params["deltaV"]
                 tmp_state.apply_constraints(self.constraints)
 
-                if i == 2 and tmp_state.speed < 8:
+                if i == 2 and tmp_state.speed < 7:
                     continue
 
                 # Check collision
@@ -527,7 +531,7 @@ class LatticeGenerator:
                 )
 
                 # Check if terminal
-                if tmp_state.check_termination(self.termination_conditions):
+                if tmp_state.check_termination(self.termination_conditions) and i != 3:
                     continue
 
                 # Add to queue

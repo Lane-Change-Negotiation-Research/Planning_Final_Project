@@ -65,8 +65,8 @@ class CollisionChecker:
             # print("Time gap", ego_state.time, sub_state.time)
             return False
 
-        ego_rad = math.sqrt(pow(ego_size[0], 2) + pow(ego_size[1], 2)) * 3
-        sub_rad = math.sqrt(pow(sub_size[0], 2) + pow(sub_size[1], 2)) * 3
+        ego_rad = math.sqrt(pow(ego_size[0], 2) + pow(ego_size[1], 2))
+        sub_rad = math.sqrt(pow(sub_size[0], 2) + pow(sub_size[1], 2))
         center_dist = math.sqrt(
             pow(ego_state.position[0] - sub_state.position[0], 2)
             + pow(ego_state.position[1] - sub_state.position[1], 2)

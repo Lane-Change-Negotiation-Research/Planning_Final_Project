@@ -259,6 +259,9 @@ class scenario_manager:
                 ego_state_slvt.time,
                 self.has_lane_change_happend,
             )
+            if goal_state is None:
+                print(full_lattice)
+                print(state_2_cost)
 
             if goal_state is not None:
                 print(

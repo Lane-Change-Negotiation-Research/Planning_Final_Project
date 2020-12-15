@@ -161,7 +161,7 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     # waypoint_list_lane_sub = filter_waypoints(all_waypoints, 15, -3)
     waypoint_list_lane_ego = filter_waypoints(all_waypoints, 15, -6)
 
-    sub_spawn_point = waypoint_list_lane_sub[1].transform
+    sub_spawn_point = waypoint_list_lane_sub[8].transform
     # sub_spawn_point = waypoint_list_lane_sub[8].transform
     sub_spawn_point = carla.Transform(
         Location(x=sub_spawn_point.location.x, y=sub_spawn_point.location.y, z=0.5),
