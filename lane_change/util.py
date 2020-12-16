@@ -161,13 +161,13 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     # waypoint_list_lane_sub = filter_waypoints(all_waypoints, 15, -3)
     waypoint_list_lane_ego = filter_waypoints(all_waypoints, 15, -6)
 
-    sub_spawn_point = waypoint_list_lane_sub[8].transform
+    sub_spawn_point = waypoint_list_lane_sub[1].transform
     # sub_spawn_point = waypoint_list_lane_sub[8].transform
     sub_spawn_point = carla.Transform(
         Location(x=sub_spawn_point.location.x, y=sub_spawn_point.location.y, z=0.5),
         Rotation(yaw=sub_spawn_point.rotation.yaw),
     )
-    ego_spawn_point = waypoint_list_lane_ego[1].transform
+    ego_spawn_point = waypoint_list_lane_ego[3].transform
     ego_spawn_point = carla.Transform(
         Location(x=ego_spawn_point.location.x, y=ego_spawn_point.location.y, z=0.5),
         Rotation(yaw=ego_spawn_point.rotation.yaw),
@@ -231,7 +231,7 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     client.apply_batch_sync([SetAutopilot(subject_vehicle, False)], synchronous_master)
 
     subject_agent = BehaviorAgent(subject_vehicle, behavior=subject_behavior)
-    destination = carla.Location(x=190.50791931152344, y=45.247249603271484, z=0.0)
+    destination = carla.Location(x=240.50791931152344, y=45.247249603271484, z=0.0)
     # destination_wp = world.get_map().get_waypoint(subject_vehicle.get_location()).next_until_lane_end(10)[-1]
     # destination_wp = destination_wp.next(40)[0]
     # destination = destination_wp.transform.location

@@ -36,7 +36,12 @@ from agents.navigation.agent import Agent
 from agents.navigation.local_planner_behavior import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.navigation.global_route_planner_dao import GlobalRoutePlannerDAO
-from agents.navigation.types_behavior import Cautious, Aggressive, Normal
+from agents.navigation.types_behavior import (
+    Cautious,
+    Aggressive,
+    Normal,
+    VeryAggressive,
+)
 
 from agents.tools.misc import positive
 
@@ -111,7 +116,7 @@ class scenario_manager:
         road = Road()
         actions = Actions()
         constraints = Constraints()
-        termination_conditions = TerminationConditions(max_time=15, max_position_x=150)
+        termination_conditions = TerminationConditions(max_time=10, max_position_x=200)
         start_state = State(
             [self.ego_vehicle.get_location().x, self.ego_vehicle.get_location().y], 0, 0
         )
@@ -158,7 +163,7 @@ class scenario_manager:
 
     def loop(self):
 
-        update_spectator(self.world, self.ego_vehicle)  # TODO: Spectator is buggy
+        # update_spectator(self.world, self.ego_vehicle)  # TODO: Spectator is buggy
 
         # 1. Get state estimation
         ego_transform = self.ego_vehicle.get_transform()
@@ -378,7 +383,7 @@ class scenario_manager:
             # self.ego_vehicle.apply_control(control_signal)
             self.ego_vehicle.set_transform(
                 carla.Transform(
-                    location=carla.Location(pose_to_track.x, pose_to_track.y, 1),
+                    location=carla.Location(pose_to_track.x, pose_to_track.y, 0),
                     rotation=carla.Rotation(yaw=pose_to_track.theta * 180 / np.pi),
                 )
             )

@@ -63,7 +63,7 @@ class Constraints:
     def __init__(
         self,
         max_v=16.5,
-        min_v=6.333,
+        min_v=3.333,
         max_position_x=10000,
         max_position_y=3.4,
         min_position_y=-3.4,
@@ -115,14 +115,14 @@ class State:
 
 
 class TerminationConditions:
-    def __init__(self, max_time=20, max_position_x=20):
+    def __init__(self, max_time=10, max_position_x=20):
 
         self.max_time = max_time
         self.max_position_x = max_position_x
 
 
 class CostCalculator:
-    def __init__(self, weights=[1, 1, 1, 1], subject_path_time_res=0.5):
+    def __init__(self, weights=[4, 1, 1, 1], subject_path_time_res=0.5):
 
         self.weights = weights
         self.subject_path_time_res = subject_path_time_res
@@ -174,23 +174,29 @@ class CostCalculator:
     ):
 
         cost = 0
-        cost += self.weights[0] * self._cost_distance(initial_state, next_state)
+        if next_state.position[1] > 0:
+            cost += self.weights[0] * self._cost_distance(initial_state, next_state)
         # cost += self.weights[1] * self._cost_lateral_offset(initial_state, next_state)
         # cost += self.weights[2] * self._cost_longitudianl_velocity(
         #     initial_state, next_state, 60
         # )
-        cost += self.weights[3] * self._cost_longitudinal_acceleration(
-            initial_state, next_state
-        )
+        # cost += self.weights[3] * self._cost_longitudinal_acceleration(
+        #     initial_state, next_state
+        # )
 
         targets_next_state = subject_path[
             int(action_params["deltaT"] / self.subject_path_time_res)
         ]
         cost += self.compute_speed_limit_cost(next_state, targets_next_state)
         # cost += self.compute_obstacle_inflation_cost(next_state, targets_next_state)
-        # cost += self.compute_blindspot_cost(next_state, targets_next_state)
+        # cost += 5 * self.compute_blindspot_cost(next_state, targets_next_state)
         # cost += self._cost_ttc(initial_state, next_state, targets_next_state)
         # cost += self._cost_delta_velocity(initial_state, next_state, targets_next_state)
+
+        ### Early lane change preference
+        # if action_params["deltaT"] > 1:
+        #     cost += next_state.time * 10
+
         return cost
 
     def compute_speed_limit_cost(self, next_state, targets_next_state):
@@ -303,7 +309,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker(1.75, 1)
+        self.collision_checker = CollisionChecker(1.75, 0.5)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -442,7 +448,7 @@ class LatticeGenerator:
             # Find best goal state
             if (
                 has_lane_change_happend
-                and curr_state.position[0] > 120
+                and curr_state.position[0] > 100
                 and cost < goal_cost
             ):
                 goal_state = curr_state_tuple
@@ -454,6 +460,9 @@ class LatticeGenerator:
                     continue
 
                 tmp_state = copy.deepcopy(curr_state)
+
+                if i == 2 and tmp_state.speed < 5:
+                    continue
 
                 # Apply action + constraints
                 # a T
@@ -472,9 +481,6 @@ class LatticeGenerator:
                 # c V
                 tmp_state.speed += next_action_params["deltaV"]
                 tmp_state.apply_constraints(self.constraints)
-
-                if i == 2 and tmp_state.speed < 7:
-                    continue
 
                 # Check collision
                 ego_size = [
