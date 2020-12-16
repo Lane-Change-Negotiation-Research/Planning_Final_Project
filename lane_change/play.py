@@ -81,11 +81,12 @@ class scenario_manager:
 
         change_to_Town06(self.client)
         self.world = self.client.get_world()
+        self.world_snapshot = self.world.get_snapshot()
         self.time_step_count = 0
         self.time_step = 0.025  # Seconds. Have to fully divide 1
         self.curr_time = 0
         self.subject_path_time_res = 0.5
-
+        self.warmup_time = 3
         # 0. Reset Scene
         initialize(self.world, self.client, self.time_step)
 
@@ -96,7 +97,7 @@ class scenario_manager:
         )
 
         # 1. Spawn vehicles
-        self.subject_behavior = "aggressive"
+        self.subject_behavior = "manual"
         (
             self.ego_vehicle,
             self.subject_vehicle,
@@ -156,10 +157,14 @@ class scenario_manager:
 
         # self.regenerate_traj_flag = False
 
-        # WIP: add path prediction module
-        self.path_predictor = PathPredictor(
-            self.world, self.subject_agent, self.subject_path_time_res
-        )
+        if(self.subject_behavior == "manual"):
+            self.path_predictor = PathPredictor(
+            self.world, self.subject_vehicle, self.subject_path_time_res
+            )
+        else:
+            self.path_predictor = PathPredictor(
+                self.world, self.subject_agent.vehicle, self.subject_path_time_res
+            )
 
     def loop(self):
 
@@ -179,7 +184,7 @@ class scenario_manager:
             self.curr_time,
         )
         ego_state_slvt = toSLVT(self.lane_marker_linestring, ego_state)
-        eog_state_pose = PoseTemp(
+        ego_state_pose = PoseTemp(
             ego_transform.location.x,
             ego_transform.location.y,
             ego_transform.rotation.yaw * np.pi / 180,
@@ -200,40 +205,58 @@ class scenario_manager:
         print(ego_state_slvt)
         print("##############")
 
-        # 5. Predict the path of the suject agent
+        if(self.subject_behavior != "manual"):
+            # 5. Predict the path of the suject agent
+            if len(self.subject_agent.get_local_planner().waypoints_queue) != 0:
+                self.subject_vehicle.apply_control(self.subject_agent.run_step())
+            else:
+                control = carla.VehicleControl()
+                control.steer = 0.0
+                control.throttle = 0.0
+                control.brake = 1.0
+                control.hand_brake = False
+                control.manual_gear_shift = False
+                self.subject_vehicle.apply_control(control)
+
         subject_path_slvt = []
-        if len(self.subject_agent.get_local_planner().waypoints_queue) != 0:
-            self.subject_vehicle.apply_control(self.subject_agent.run_step())
-            steps = 20
-            subject_path = self.path_predictor.get_predicted_path(
-                steps, subject_state_slvt.time
+        steps = 20
+        subject_path = self.path_predictor.get_predicted_path(
+            steps, subject_state_slvt.time
+        )
+        subject_path_slvt = [
+            toSLVT(self.lane_marker_linestring, elem) for elem in subject_path
+        ]
+        # print([(pt.position[0], pt.speed, pt.time) for pt in subject_path_slvt])
+        for i in range(len(subject_path)):
+            self.world.debug.draw_string(
+                carla.Location(
+                    x=subject_path[i].position[0],
+                    y=subject_path[i].position[1],
+                    z=0,
+                ),
+                "X",
+                draw_shadow=False,
+                color=carla.Color(r=0, g=0, b=255),
             )
-            subject_path_slvt = [
-                toSLVT(self.lane_marker_linestring, elem) for elem in subject_path
-            ]
-            # print([(pt.position[0], pt.speed, pt.time) for pt in subject_path_slvt])
-            for i in range(len(subject_path)):
-                self.world.debug.draw_string(
-                    carla.Location(
-                        x=subject_path[i].position[0],
-                        y=subject_path[i].position[1],
-                        z=0,
-                    ),
-                    "X",
-                    draw_shadow=False,
-                    color=carla.Color(r=0, g=0, b=255),
-                )
-        else:
-            control = carla.VehicleControl()
-            control.steer = 0.0
-            control.throttle = 0.0
-            control.brake = 1.0
-            control.hand_brake = False
-            control.manual_gear_shift = False
-            self.subject_vehicle.apply_control(control)
+
 
         # 2. Get next plan to track
 
+        while(self.world.get_snapshot().timestamp.elapsed_seconds < 15):
+            # print("Time: ", self.world_snapshot.timestamp.elapsed_seconds)
+            control_signal = self.controller.run_step(
+                ego_speed, ego_state_pose
+            )
+            self.ego_vehicle.set_transform(
+                carla.Transform(
+                    location=carla.Location(ego_state_pose.x, ego_state_pose.y, 0),
+                    rotation=carla.Rotation(yaw=ego_state_pose.theta * 180 / np.pi),
+                )
+            )
+            # print("ego_speed: ", ego_speed)
+            self.world.tick()
+
+        
         if self.time_step_count % 40 == 0 and self.is_lane_change_happening == 0:
 
             self.time_step_count = 0

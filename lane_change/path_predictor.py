@@ -12,11 +12,11 @@ from lattice_generator import State
 
 
 class PathPredictor:
-    def __init__(self, world, agent, dt):
+    def __init__(self, world, vehicle, dt):
         self.subject_path = None
         self.world = world
         self.map = self.world.get_map()
-        self.vehicle = agent.vehicle
+        self.vehicle = vehicle
         self.dt = dt
         self.state = np.zeros((6, 1))
         self.update_state(t=0)

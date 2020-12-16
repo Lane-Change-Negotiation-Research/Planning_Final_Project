@@ -309,7 +309,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker(1.75, 0.5)
+        self.collision_checker = CollisionChecker(1.75, 0.2)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -418,8 +418,6 @@ class LatticeGenerator:
         )  # (x,y,v,t,lane_change_status) -> {"action" -> next (x,y,v,t,lane_change_status)}
         state_2_cost = {}
         goal_cost = 2 ** 31
-
-        start_state
 
         queue = deque()
         queue.append(
