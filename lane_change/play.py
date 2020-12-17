@@ -97,7 +97,7 @@ class scenario_manager:
         )
 
         # 1. Spawn vehicles
-        self.subject_behavior = "manual"
+        self.subject_behavior = "very_aggressive"
         (
             self.ego_vehicle,
             self.subject_vehicle,
@@ -117,7 +117,7 @@ class scenario_manager:
         road = Road()
         actions = Actions()
         constraints = Constraints()
-        termination_conditions = TerminationConditions(max_time=10, max_position_x=200)
+        termination_conditions = TerminationConditions(max_time=100, max_position_x=200)
         start_state = State(
             [self.ego_vehicle.get_location().x, self.ego_vehicle.get_location().y], 0, 0
         )
@@ -153,13 +153,13 @@ class scenario_manager:
         self.is_lane_change_happening = 0
         self.planned_path = None
         self.next_timestep = None
-        self.latest_tracked_speed_ego = 0
+        self.latest_tracked_speed_ego = get_speed(self.ego_vehicle)
 
         # self.regenerate_traj_flag = False
 
-        if(self.subject_behavior == "manual"):
+        if self.subject_behavior == "manual":
             self.path_predictor = PathPredictor(
-            self.world, self.subject_vehicle, self.subject_path_time_res
+                self.world, self.subject_vehicle, self.subject_path_time_res
             )
         else:
             self.path_predictor = PathPredictor(
@@ -205,7 +205,7 @@ class scenario_manager:
         print(ego_state_slvt)
         print("##############")
 
-        if(self.subject_behavior != "manual"):
+        if self.subject_behavior != "manual":
             # 5. Predict the path of the suject agent
             if len(self.subject_agent.get_local_planner().waypoints_queue) != 0:
                 self.subject_vehicle.apply_control(self.subject_agent.run_step())
@@ -239,14 +239,14 @@ class scenario_manager:
                 color=carla.Color(r=0, g=0, b=255),
             )
 
-
         # 2. Get next plan to track
 
-        while(self.world.get_snapshot().timestamp.elapsed_seconds < 15):
+        while (
+            self.world.get_snapshot().timestamp.elapsed_seconds < 15
+            and self.subject_behavior == "manual"
+        ):
             # print("Time: ", self.world_snapshot.timestamp.elapsed_seconds)
-            control_signal = self.controller.run_step(
-                ego_speed, ego_state_pose
-            )
+            control_signal = self.controller.run_step(ego_speed, ego_state_pose)
             self.ego_vehicle.set_transform(
                 carla.Transform(
                     location=carla.Location(ego_state_pose.x, ego_state_pose.y, 0),
@@ -256,8 +256,7 @@ class scenario_manager:
             # print("ego_speed: ", ego_speed)
             self.world.tick()
 
-        
-        if self.time_step_count % 40 == 0 and self.is_lane_change_happening == 0:
+        if self.time_step_count % 10 == 0 and self.is_lane_change_happening == 0:
 
             self.time_step_count = 0
 

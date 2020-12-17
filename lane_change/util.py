@@ -163,8 +163,8 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     middle_lane = filter_waypoints(all_waypoints, 15, -5)
     right_lane = filter_waypoints(all_waypoints, 15, -6)
 
-    sub_spawn_point = left_most_lane[1].transform
-    manual_spawn_point = middle_lane[1].transform
+    sub_spawn_point = middle_lane[1].transform
+    manual_spawn_point = left_most_lane[1].transform
     ego_spawn_point = right_lane[1].transform
 
     sub_spawn_point = carla.Transform(
@@ -176,7 +176,9 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
         Rotation(yaw=ego_spawn_point.rotation.yaw),
     )
     manual_spawn_point = carla.Transform(
-        Location(x=manual_spawn_point.location.x, y=manual_spawn_point.location.y, z=0.5),
+        Location(
+            x=manual_spawn_point.location.x, y=manual_spawn_point.location.y, z=0.5
+        ),
         Rotation(yaw=manual_spawn_point.rotation.yaw),
     )
 
@@ -244,7 +246,7 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
 
     client.apply_batch_sync([SetAutopilot(ego_vehicle, False)], synchronous_master)
 
-    if(subject_behavior == "manual"):
+    if subject_behavior == "manual":
         manual_agent = Agent(manual_vehicle)
     else:
         subject_agent = BehaviorAgent(subject_vehicle, behavior=subject_behavior)
@@ -275,7 +277,7 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     #         color=carla.Color(r=255, g=0, b=0),
     #         life_time=10,
     #     )
-    if(subject_behavior == "manual"):
+    if subject_behavior == "manual":
         return (ego_vehicle, manual_vehicle, current_lane_waypoints, manual_agent)
     else:
         return (ego_vehicle, subject_vehicle, current_lane_waypoints, subject_agent)
