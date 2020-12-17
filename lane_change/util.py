@@ -157,25 +157,41 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     blueprints = [x for x in blueprints if x.id.endswith("model3")]
 
     all_waypoints = world.get_map().generate_waypoints(3)
-    waypoint_list_lane_sub = filter_waypoints(all_waypoints, 15, -5)
-    # waypoint_list_lane_sub = filter_waypoints(all_waypoints, 15, -3)
-    waypoint_list_lane_ego = filter_waypoints(all_waypoints, 15, -6)
 
-    sub_spawn_point = waypoint_list_lane_sub[1].transform
-    # sub_spawn_point = waypoint_list_lane_sub[8].transform
+    # waypoint_list = filter_waypoints(road_id, lane_id)
+    left_most_lane = filter_waypoints(all_waypoints, 15, -3)
+    middle_lane = filter_waypoints(all_waypoints, 15, -5)
+    right_lane = filter_waypoints(all_waypoints, 15, -6)
+
+    sub_spawn_point = left_most_lane[1].transform
+    manual_spawn_point = middle_lane[1].transform
+    ego_spawn_point = right_lane[1].transform
+
     sub_spawn_point = carla.Transform(
         Location(x=sub_spawn_point.location.x, y=sub_spawn_point.location.y, z=0.5),
         Rotation(yaw=sub_spawn_point.rotation.yaw),
     )
-    ego_spawn_point = waypoint_list_lane_ego[3].transform
     ego_spawn_point = carla.Transform(
         Location(x=ego_spawn_point.location.x, y=ego_spawn_point.location.y, z=0.5),
         Rotation(yaw=ego_spawn_point.rotation.yaw),
+    )
+    manual_spawn_point = carla.Transform(
+        Location(x=manual_spawn_point.location.x, y=manual_spawn_point.location.y, z=0.5),
+        Rotation(yaw=manual_spawn_point.rotation.yaw),
     )
 
     # --------------
     # Spawn vehicles
     # --------------
+
+    # Manual Vehicle
+    blueprint = random.choice(blueprints)
+    color = "0,255,0"
+    blueprint.set_attribute("color", color)
+    blueprint.set_attribute("role_name", "hero")
+    batch.append(
+        SpawnActor(blueprint, manual_spawn_point).then(SetAutopilot(FutureActor, False))
+    )
 
     # Subject Vehicle Details
     blueprint = random.choice(blueprints)
@@ -209,17 +225,16 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
         else:
             vehicles_list.append(response.actor_id)
 
-    subject_vehicle = world.get_actors(vehicles_list)[
-        0
-    ]  # 0 because only 1 vehicle being spawned
+    manual_vehicle = world.get_actors(vehicles_list)[0]
+    subject_vehicle = world.get_actors(vehicles_list)[1]
     # client.apply_batch_sync([SetAutopilot(subject_vehicle, False)], synchronous_master)
 
     ego_vehicle = world.get_actors([ego_vehicle_id])[0]
 
-    # update_spectator(world, ego_vehicle)
-
     print("Warm start initiated...")
     warm_start_curr = 0
+    update_spectator(world, ego_vehicle)
+
     while warm_start_curr < 3:
         warm_start_curr += world.get_settings().fixed_delta_seconds
         if synchronous_master:
@@ -228,18 +243,20 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
             world.wait_for_tick()
 
     client.apply_batch_sync([SetAutopilot(ego_vehicle, False)], synchronous_master)
-    client.apply_batch_sync([SetAutopilot(subject_vehicle, False)], synchronous_master)
 
-    subject_agent = BehaviorAgent(subject_vehicle, behavior=subject_behavior)
-    destination = carla.Location(x=240.50791931152344, y=45.247249603271484, z=0.0)
-    # destination_wp = world.get_map().get_waypoint(subject_vehicle.get_location()).next_until_lane_end(10)[-1]
-    # destination_wp = destination_wp.next(40)[0]
-    # destination = destination_wp.transform.location
-    subject_agent.set_destination(
-        subject_agent.vehicle.get_location(), destination, clean=True
-    )
+    if(subject_behavior == "manual"):
+        manual_agent = Agent(manual_vehicle)
+    else:
+        subject_agent = BehaviorAgent(subject_vehicle, behavior=subject_behavior)
+        destination = carla.Location(x=240.50791931152344, y=45.247249603271484, z=0.0)
+        # destination_wp = world.get_map().get_waypoint(subject_vehicle.get_location()).next_until_lane_end(10)[-1]
+        # destination_wp = destination_wp.next(40)[0]
+        # destination = destination_wp.transform.location
+        subject_agent.set_destination(
+            subject_agent.vehicle.get_location(), destination, clean=True
+        )
 
-    subject_agent.update_information(world)
+        subject_agent.update_information(world)
 
     print("Warm start finished...")
 
@@ -258,8 +275,10 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     #         color=carla.Color(r=255, g=0, b=0),
     #         life_time=10,
     #     )
-
-    return (ego_vehicle, subject_vehicle, current_lane_waypoints, subject_agent)
+    if(subject_behavior == "manual"):
+        return (ego_vehicle, manual_vehicle, current_lane_waypoints, manual_agent)
+    else:
+        return (ego_vehicle, subject_vehicle, current_lane_waypoints, subject_agent)
 
 
 def initialize(world, client, time_step):
@@ -291,8 +310,8 @@ def update_spectator(world, ego_vehicle):
     spectator = world.get_spectator()
     spectator_transform = ego_vehicle.get_transform()
     spectator_transform = carla.Transform(
-        spectator_transform.location + carla.Location(x=-15.5, z=8.5),
-        carla.Rotation(pitch=-10.0),
+        spectator_transform.location + carla.Location(x=-15.5, z=20),
+        carla.Rotation(pitch=-20.0),
     )
     spectator.set_transform(spectator_transform)
 
