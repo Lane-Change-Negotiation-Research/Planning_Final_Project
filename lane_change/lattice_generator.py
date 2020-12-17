@@ -9,6 +9,7 @@ import copy
 from more_itertools import pairwise
 from collections import deque
 from collision_checker import CollisionChecker
+from queue import PriorityQueue
 
 
 class Road:
@@ -112,6 +113,10 @@ class State:
             + str(self.time)
             + ")"
         )
+
+    def __lt__(self, other):
+
+        return self.position[0] < other.position[0]
 
 
 class TerminationConditions:
@@ -309,7 +314,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker(1.75, 0.2)
+        self.collision_checker = CollisionChecker(1.75, 2)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -419,14 +424,14 @@ class LatticeGenerator:
         state_2_cost = {}
         goal_cost = 2 ** 31
 
-        queue = deque()
-        queue.append(
-            (start_state, lane_change_init_flag, 0)
+        queue = PriorityQueue()
+        queue.put(
+            (0, lane_change_init_flag, start_state)
         )  # (state, has lane change happened, cost)
         goal_state = None
-        while len(queue) != 0:
+        while not queue.empty():
 
-            curr_state, has_lane_change_happend, cost = queue.popleft()
+            cost, has_lane_change_happend, curr_state = queue.get()
             curr_state_tuple = (
                 curr_state.position[0],
                 curr_state.position[1],
@@ -447,10 +452,11 @@ class LatticeGenerator:
             if (
                 has_lane_change_happend
                 and curr_state.position[0] > 100
-                and cost < goal_cost
+                # and cost < goal_cost
             ):
                 goal_state = curr_state_tuple
                 goal_cost = cost
+                break
 
             for i, next_action_params in enumerate(self.actions.action_params_list):
 
@@ -540,9 +546,9 @@ class LatticeGenerator:
 
                 # Add to queue
                 if i == 3 or has_lane_change_happend:
-                    queue.append((tmp_state, 1, cost + cost_of_transition))
+                    queue.put((cost + cost_of_transition, 1, tmp_state))
                 else:
-                    queue.append((tmp_state, 0, cost + cost_of_transition))
+                    queue.put((cost + cost_of_transition, 0, tmp_state))
 
         ## Reverse Direction Lattice (x,y,v,t,lane_change_status) -> {"action" -> parent (x,y,v,t,lane_change_status)}
 
@@ -555,6 +561,10 @@ class LatticeGenerator:
                     reverse_lattice[next_state][action] = parent_state
                 else:
                     reverse_lattice[next_state] = {action: parent_state}
+
+        # import ipdb
+
+        # ipdb.set_trace()
 
         return lattice, state_2_cost, reverse_lattice, goal_state
 

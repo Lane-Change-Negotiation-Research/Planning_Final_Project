@@ -47,7 +47,7 @@ class VeryAggressive(object):
     """Class for Very Aggressive agent."""
 
     max_speed = 80
-    speed_lim_dist = -20
+    speed_lim_dist = -40
     speed_decrease = 1
     safety_time = 3
     min_proximity_threshold = 8
