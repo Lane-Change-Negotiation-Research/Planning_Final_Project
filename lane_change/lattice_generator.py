@@ -280,31 +280,31 @@ class CostCalculator:
             targets_next_state.position[1] - next_state.position[1]
         )
 
-        if lateral_offset_diff > 3:
-            return 0
+        # if lateral_offset_diff > 3:
+        #     return 0
+        # else:
+        #     inv_cost = abs(
+        #         targets_next_state.position[0] - next_state.position[0]
+        #     ) / abs(targets_next_state.speed - next_state.speed())
+        #     return 1.0 / inv_cost
+        delta_velocity = 0
+        if lateral_offset_diff < 3:  # need to remove hardcode
+            distance = self._cost_distance(next_state, targets_next_state)
         else:
-            inv_cost = abs(
-                targets_next_state.position[0] - next_state.position[0]
-            ) / abs(targets_next_state.speed - next_state.speed())
-            return 1.0 / inv_cost
-        # delta_velocity = 0
-        # if lateral_offset_diff < 3:  # need to remove hardcode
-        #     distance = self._cost_distance(next_state, targets_next_state)
-        # else:
-        #     distance = 10000
-        # ttc = distance / targets_next_state.speed
+            distance = 10000
+        ttc = distance / targets_next_state.speed
 
-        # # set an ideal ttc as 3 seconds and see how much the speed has to change
-        # ttc_ideal = 3  # taught in driving schools? but still hardcoded
-        # if ttc < ttc_ideal:
-        #     ideal_speed = distance / ttc_ideal
-        # else:
-        #     ideal_speed = distance / ttc  # TODO: please check
-        # # this number will be a negative number
-        # delta_velocity = abs(ideal_speed - subject_state.speed)
-        # # multiplying here to make it a positive cost associated with this change
-        # # delta_velocity *= -1
-        # return delta_velocity
+        # set an ideal ttc as 3 seconds and see how much the speed has to change
+        ttc_ideal = 10  # taught in driving schools? but still hardcoded
+        if ttc < ttc_ideal:
+            ideal_speed = distance / ttc_ideal
+        else:
+            ideal_speed = distance / ttc  # TODO: please check
+        # this number will be a negative number
+        delta_velocity = abs(ideal_speed - subject_state.speed)
+        # multiplying here to make it a positive cost associated with this change
+        # delta_velocity *= -1
+        return delta_velocity
 
 
 class LatticeGenerator:
