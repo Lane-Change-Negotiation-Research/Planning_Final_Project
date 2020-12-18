@@ -172,27 +172,50 @@ class scenario_manager:
 
     def plot_traj(self):
 
-        fig, ax1 = plt.subplots(1, 1, figsize=(16, 6))
-        vel = [state.speed for state in self.subject_traj]
-        t = [self.time_step * i for i in range(len(vel))]
-        ax1.plot(t, vel, label="Subject")
-        vel = [state.speed for state in self.ego_traj]
-        t = [self.time_step * i for i in range(len(vel))]
-        ax1.plot(t, vel, label="Ego")
+        # fig, ax1 = plt.subplots(1, 1, figsize=(16, 6))
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+        subject_vel = [state.speed for state in self.subject_traj]
+        t = [self.time_step * i for i in range(len(subject_vel))]
+        ax1.plot(t, subject_vel, label="Subject")
+        ego_vel = [state.speed for state in self.ego_traj]
+        t = [self.time_step * i for i in range(len(ego_vel))]
+        ax1.plot(t, ego_vel, label="Ego")
         ax1.set_xlabel("Time(s)")
         ax1.set_ylabel("Velocity(m/sec)")
         ax1.set_title("Velocity Profile")
         ax1.legend()
 
+        subject_acc = [((self.subject_traj[i+1].speed - self.subject_traj[i].speed) / 
+                (self.subject_traj[i+1].time - self.subject_traj[i].time)) 
+               for i in range(1, len(self.subject_traj)-1, 5)]
+        t = [self.time_step*i for i in range(len(subject_acc))]
+        ax2.plot(t, subject_acc, label="Subject")
+
+        # ego_acc = [((self.ego_traj[i+1].speed - self.ego_traj[i].speed) / 
+        #         (self.ego_traj[i+1].time - self.ego_traj[i].time)) 
+        #        for i in range(1, len(self.ego_traj)-1, 5)]
+        # t = [self.time_step*i for i in range(len(ego_acc))]
+        # ax2.plot(t, ego_acc, label="Ego")
+
+        ax2.set_xlabel("Time(s)")
+        ax2.set_ylabel("Acceleration (m/sec^2)")
+        ax2.set_title("Acceleration Profile")
+        ax2.legend()
+
         fig.suptitle(
-            "Velocity Profile for " + self.subject_behavior + " behavior", fontsize=20
+            "Velocity/Acceleration Profile for " + self.subject_behavior + " behavior", fontsize=20
         )
+
 
         if not os.path.exists("./results"):
             os.makedirs("./results")
         fig.savefig("./results/" + self.subject_behavior + str(time.time()) + ".png")
 
-        np.save(vel, "./results/")
+        data = {}
+        data["subject_vel"] = subject_vel
+        data["ego_vel"] = ego_vel
+        data["subject_acc"] = subject_acc
+        np.save("./results/" + self.subject_behavior + str(time.time()), data)
         plt.close(fig)
 
     def loop(self):
