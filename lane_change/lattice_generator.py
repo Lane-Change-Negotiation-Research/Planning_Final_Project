@@ -64,7 +64,7 @@ class Constraints:
     def __init__(
         self,
         max_v=16.5,
-        min_v=4.5,
+        min_v=7.33,
         max_position_x=10000,
         max_position_y=3.4,
         min_position_y=-3.4,
@@ -190,13 +190,17 @@ class CostCalculator:
         # )
 
         targets_next_state = subject_path[
-            int(action_params["deltaT"] / self.subject_path_time_res)
+            int((next_state.time / self.subject_path_time_res)) - 1
         ]
-        cost += self.compute_speed_limit_cost(next_state, targets_next_state)
+        # cost += self.compute_speed_limit_cost(next_state, targets_next_state)
         # cost += self.compute_obstacle_inflation_cost(next_state, targets_next_state)
         # cost += 5 * self.compute_blindspot_cost(next_state, targets_next_state)
         # cost += self._cost_ttc(initial_state, next_state, targets_next_state)
-        # cost += self._cost_delta_velocity(initial_state, next_state, targets_next_state)
+        # print(cost, "#####")
+        cost += 50 * self._cost_delta_velocity(
+            initial_state, next_state, targets_next_state
+        )
+        # print(cost, "$$$$$")
 
         ### Early lane change preference
         # if action_params["deltaT"] > 1:
@@ -275,24 +279,32 @@ class CostCalculator:
         lateral_offset_diff = abs(
             targets_next_state.position[1] - next_state.position[1]
         )
-        delta_velocity = 0
-        if lateral_offset_diff < 3:  # need to remove hardcode
-            distance = self._cost_distance(next_state, targets_next_state)
-        else:
-            distance = 10000
-        ttc = distance / targets_next_state.speed
 
-        # set an ideal ttc as 3 seconds and see how much the speed has to change
-        ttc_ideal = 3  # taught in driving schools? but still hardcoded
-        if ttc < ttc_ideal:
-            ideal_speed = distance / ttc_ideal
+        if lateral_offset_diff > 3:
+            return 0
         else:
-            ideal_speed = distance / ttc  # TODO: please check
-        # this number will be a negative number
-        delta_velocity = ideal_speed - subject_state.speed
-        # multiplying here to make it a positive cost associated with this change
-        delta_velocity *= -1
-        return delta_velocity
+            inv_cost = abs(
+                targets_next_state.position[0] - next_state.position[0]
+            ) / abs(targets_next_state.speed - next_state.speed())
+            return 1.0 / inv_cost
+        # delta_velocity = 0
+        # if lateral_offset_diff < 3:  # need to remove hardcode
+        #     distance = self._cost_distance(next_state, targets_next_state)
+        # else:
+        #     distance = 10000
+        # ttc = distance / targets_next_state.speed
+
+        # # set an ideal ttc as 3 seconds and see how much the speed has to change
+        # ttc_ideal = 3  # taught in driving schools? but still hardcoded
+        # if ttc < ttc_ideal:
+        #     ideal_speed = distance / ttc_ideal
+        # else:
+        #     ideal_speed = distance / ttc  # TODO: please check
+        # # this number will be a negative number
+        # delta_velocity = abs(ideal_speed - subject_state.speed)
+        # # multiplying here to make it a positive cost associated with this change
+        # # delta_velocity *= -1
+        # return delta_velocity
 
 
 class LatticeGenerator:
@@ -314,7 +326,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker(1.75, 2)
+        self.collision_checker = CollisionChecker(1.75, 1)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -465,7 +477,7 @@ class LatticeGenerator:
 
                 tmp_state = copy.deepcopy(curr_state)
 
-                if i == 2 and tmp_state.speed < 5:
+                if i == 2 and tmp_state.speed < 8:
                     continue
 
                 # Apply action + constraints

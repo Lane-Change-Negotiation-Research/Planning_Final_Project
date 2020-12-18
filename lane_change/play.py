@@ -99,7 +99,7 @@ class scenario_manager:
         )
 
         # 1. Spawn vehicles
-        self.subject_behavior = "normal"
+        self.subject_behavior = "aggressive"
         (
             self.ego_vehicle,
             self.subject_vehicle,
@@ -174,17 +174,19 @@ class scenario_manager:
 
         fig, ax1 = plt.subplots(1, 1, figsize=(16, 6))
         vel = [state.speed for state in self.subject_traj]
-        t = [self.time_step*i for i in range(len(vel))]
+        t = [self.time_step * i for i in range(len(vel))]
         ax1.plot(t, vel, label="Subject")
         vel = [state.speed for state in self.ego_traj]
-        t = [self.time_step*i for i in range(len(vel))]
+        t = [self.time_step * i for i in range(len(vel))]
         ax1.plot(t, vel, label="Ego")
         ax1.set_xlabel("Time(s)")
         ax1.set_ylabel("Velocity(m/sec)")
         ax1.set_title("Velocity Profile")
         ax1.legend()
 
-        fig.suptitle("Velocity Profile for " + self.subject_behavior + " behavior", fontsize=20)
+        fig.suptitle(
+            "Velocity Profile for " + self.subject_behavior + " behavior", fontsize=20
+        )
 
         if not os.path.exists("./results"):
             os.makedirs("./results")
@@ -247,7 +249,7 @@ class scenario_manager:
                 self.subject_vehicle.apply_control(control)
 
         subject_path_slvt = []
-        steps = 20
+        steps = 50
         subject_path = self.path_predictor.get_predicted_path(
             steps, subject_state_slvt.time
         )
@@ -454,6 +456,7 @@ class scenario_manager:
                 self.loop()
 
         except Exception as e:
+            print(e)
             self.plot_traj()
         #     for a in self.world.get_actors().filter("vehicle*"):
         #         if a.is_alive:
