@@ -189,7 +189,6 @@ class CostCalculator:
         #     initial_state, next_state
         # )
 
-        print(next_state.time, len(subject_path))
         targets_next_state = subject_path[
             int((next_state.time / self.subject_path_time_res))
         ]
@@ -201,14 +200,14 @@ class CostCalculator:
         # cost += 5 * self.compute_blindspot_cost(next_state, targets_next_state)
         # cost += self._cost_ttc(initial_state, next_state, targets_next_state)
         # print(cost, "#####")
-        cost += 50 * self._cost_delta_velocity(
+        cost += 1 * self._cost_delta_velocity(
             next_state, targets_current_state, targets_next_state
         )
         # print(cost, "$$$$$")
 
         ### Early lane change preference
         # if action_params["deltaT"] > 1:
-        #     cost += next_state.time * 10
+        cost += initial_state.time
 
         return cost
 
@@ -284,8 +283,8 @@ class CostCalculator:
             targets_next_state.position[1] - next_state.position[1]
         )
 
-        # if lateral_offset_diff > 3:
-        #     return 0
+        if lateral_offset_diff > 3:
+            return 0
         # else:
         #     inv_cost = abs(
         #         targets_next_state.position[0] - next_state.position[0]
@@ -330,7 +329,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker(1.75, 3)
+        self.collision_checker = CollisionChecker(1.75, 1)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -481,7 +480,7 @@ class LatticeGenerator:
 
                 tmp_state = copy.deepcopy(curr_state)
 
-                if i == 2 and tmp_state.speed < 5:
+                if i == 2 and tmp_state.speed < 8:
                     continue
 
                 # Apply action + constraints

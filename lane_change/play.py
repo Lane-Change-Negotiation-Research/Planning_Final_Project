@@ -119,7 +119,7 @@ class scenario_manager:
         road = Road()
         actions = Actions()
         constraints = Constraints()
-        termination_conditions = TerminationConditions(max_time=20, max_position_x=200)
+        termination_conditions = TerminationConditions(max_time=15, max_position_x=180)
         start_state = State(
             [self.ego_vehicle.get_location().x, self.ego_vehicle.get_location().y], 0, 0
         )
@@ -191,6 +191,8 @@ class scenario_manager:
         if not os.path.exists("./results"):
             os.makedirs("./results")
         fig.savefig("./results/" + self.subject_behavior + str(time.time()) + ".png")
+
+        np.save(vel, "./results/")
         plt.close(fig)
 
     def loop(self):
@@ -451,17 +453,17 @@ class scenario_manager:
 
     def play(self):
 
-        # try:
-        while True:
-            self.loop()
+        try:
+            while True:
+                self.loop()
 
-        # except Exception as e:
-        #     print(e)
-        #     self.plot_traj()
-        #     for a in self.world.get_actors().filter("vehicle*"):
-        #         if a.is_alive:
-        #             a.destroy()
-        #     reset_settings(self.world)
+        except Exception as e:
+            # print(e)
+            self.plot_traj()
+            # for a in self.world.get_actors().filter("vehicle*"):
+            #     if a.is_alive:
+            #         a.destroy()
+            # reset_settings(self.world)
 
 
 if __name__ == "__main__":
