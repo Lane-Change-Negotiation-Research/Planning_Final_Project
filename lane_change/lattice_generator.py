@@ -189,7 +189,11 @@ class CostCalculator:
         #     initial_state, next_state
         # )
 
+        print(next_state.time, len(subject_path))
         targets_next_state = subject_path[
+            int((next_state.time / self.subject_path_time_res))
+        ]
+        targets_current_state = subject_path[
             int((next_state.time / self.subject_path_time_res)) - 1
         ]
         # cost += self.compute_speed_limit_cost(next_state, targets_next_state)
@@ -198,7 +202,7 @@ class CostCalculator:
         # cost += self._cost_ttc(initial_state, next_state, targets_next_state)
         # print(cost, "#####")
         cost += 50 * self._cost_delta_velocity(
-            initial_state, next_state, targets_next_state
+            next_state, targets_current_state, targets_next_state
         )
         # print(cost, "$$$$$")
 
@@ -326,7 +330,7 @@ class LatticeGenerator:
         self.constraints = constraints
         self.termination_conditions = termination_conditions
         self.cost_calculator = cost_calculator
-        self.collision_checker = CollisionChecker(1.75, 1)
+        self.collision_checker = CollisionChecker(1.75, 3)
         self.ego_vehicle = ego
         self.subject_vehicle = subject
 
@@ -477,7 +481,7 @@ class LatticeGenerator:
 
                 tmp_state = copy.deepcopy(curr_state)
 
-                if i == 2 and tmp_state.speed < 8:
+                if i == 2 and tmp_state.speed < 5:
                     continue
 
                 # Apply action + constraints

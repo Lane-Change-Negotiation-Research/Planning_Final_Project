@@ -99,7 +99,7 @@ class scenario_manager:
         )
 
         # 1. Spawn vehicles
-        self.subject_behavior = "aggressive"
+        self.subject_behavior = "very_aggressive"
         (
             self.ego_vehicle,
             self.subject_vehicle,
@@ -119,7 +119,7 @@ class scenario_manager:
         road = Road()
         actions = Actions()
         constraints = Constraints()
-        termination_conditions = TerminationConditions(max_time=100, max_position_x=200)
+        termination_conditions = TerminationConditions(max_time=20, max_position_x=200)
         start_state = State(
             [self.ego_vehicle.get_location().x, self.ego_vehicle.get_location().y], 0, 0
         )
@@ -249,7 +249,7 @@ class scenario_manager:
                 self.subject_vehicle.apply_control(control)
 
         subject_path_slvt = []
-        steps = 50
+        steps = 100
         subject_path = self.path_predictor.get_predicted_path(
             steps, subject_state_slvt.time
         )
@@ -451,13 +451,13 @@ class scenario_manager:
 
     def play(self):
 
-        try:
-            while True:
-                self.loop()
+        # try:
+        while True:
+            self.loop()
 
-        except Exception as e:
-            print(e)
-            self.plot_traj()
+        # except Exception as e:
+        #     print(e)
+        #     self.plot_traj()
         #     for a in self.world.get_actors().filter("vehicle*"):
         #         if a.is_alive:
         #             a.destroy()
