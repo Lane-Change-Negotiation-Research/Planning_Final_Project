@@ -229,7 +229,6 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
 
     manual_vehicle = world.get_actors(vehicles_list)[0]
     subject_vehicle = world.get_actors(vehicles_list)[1]
-    # client.apply_batch_sync([SetAutopilot(subject_vehicle, False)], synchronous_master)
 
     ego_vehicle = world.get_actors([ego_vehicle_id])[0]
 
@@ -245,6 +244,7 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
             world.wait_for_tick()
 
     client.apply_batch_sync([SetAutopilot(ego_vehicle, False)], synchronous_master)
+    client.apply_batch_sync([SetAutopilot(subject_vehicle, False)], synchronous_master)
 
     if subject_behavior == "manual":
         manual_agent = Agent(manual_vehicle)

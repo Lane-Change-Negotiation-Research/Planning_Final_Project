@@ -64,7 +64,7 @@ class Constraints:
     def __init__(
         self,
         max_v=16.5,
-        min_v=3.333,
+        min_v=4.5,
         max_position_x=10000,
         max_position_y=3.4,
         min_position_y=-3.4,

@@ -9,6 +9,8 @@ import sys
 import time
 import ipdb
 import numpy as np
+import matplotlib.pyplot as plt
+
 from util import (
     change_to_Town06,
     get_speed,
@@ -97,7 +99,7 @@ class scenario_manager:
         )
 
         # 1. Spawn vehicles
-        self.subject_behavior = "very_aggressive"
+        self.subject_behavior = "normal"
         (
             self.ego_vehicle,
             self.subject_vehicle,
@@ -165,6 +167,29 @@ class scenario_manager:
             self.path_predictor = PathPredictor(
                 self.world, self.subject_agent.vehicle, self.subject_path_time_res
             )
+        self.subject_traj = []
+        self.ego_traj = []
+
+    def plot_traj(self):
+
+        fig, ax1 = plt.subplots(1, 1, figsize=(16, 6))
+        vel = [state.speed for state in self.subject_traj]
+        t = [self.time_step*i for i in range(len(vel))]
+        ax1.plot(t, vel, label="Subject")
+        vel = [state.speed for state in self.ego_traj]
+        t = [self.time_step*i for i in range(len(vel))]
+        ax1.plot(t, vel, label="Ego")
+        ax1.set_xlabel("Time(s)")
+        ax1.set_ylabel("Velocity(m/sec)")
+        ax1.set_title("Velocity Profile")
+        ax1.legend()
+
+        fig.suptitle("Velocity Profile for " + self.subject_behavior + " behavior", fontsize=20)
+
+        if not os.path.exists("./results"):
+            os.makedirs("./results")
+        fig.savefig("./results/" + self.subject_behavior + str(time.time()) + ".png")
+        plt.close(fig)
 
     def loop(self):
 
@@ -199,6 +224,9 @@ class scenario_manager:
             self.curr_time,
         )
         subject_state_slvt = toSLVT(self.lane_marker_linestring, subject_state)
+
+        self.subject_traj.append(subject_state)
+        self.ego_traj.append(ego_state)
 
         print("##############")
         print(subject_state_slvt)
@@ -377,7 +405,7 @@ class scenario_manager:
                 "O",
                 draw_shadow=False,
                 color=carla.Color(r=0, g=int(255 * gamma), b=0),
-                life_time=1,
+                life_time=0.25,
             )
 
         if pose_to_track is not None:
@@ -421,13 +449,12 @@ class scenario_manager:
 
     def play(self):
 
-        # try:
-        while True:
-            self.loop()
+        try:
+            while True:
+                self.loop()
 
-        # except Exception as e:
-        #     print(e)
-
+        except Exception as e:
+            self.plot_traj()
         #     for a in self.world.get_actors().filter("vehicle*"):
         #         if a.is_alive:
         #             a.destroy()
