@@ -99,7 +99,7 @@ class scenario_manager:
         )
 
         # 1. Spawn vehicles
-        self.subject_behavior = "very_aggressive"
+        self.subject_behavior = "aggressive"
         (
             self.ego_vehicle,
             self.subject_vehicle,

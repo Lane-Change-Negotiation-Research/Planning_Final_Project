@@ -200,9 +200,10 @@ class CostCalculator:
         # cost += 5 * self.compute_blindspot_cost(next_state, targets_next_state)
         # cost += self._cost_ttc(initial_state, next_state, targets_next_state)
         # print(cost, "#####")
-        cost += 1 * self._cost_delta_velocity(
+        cost += 100 * self._cost_delta_velocity(
             next_state, targets_current_state, targets_next_state
         )
+        cost += 10 * self._cost_proximity(next_state, targets_next_state)
         # print(cost, "$$$$$")
 
         ### Early lane change preference
@@ -210,6 +211,21 @@ class CostCalculator:
         cost += initial_state.time
 
         return cost
+
+    def _cost_proximity(self, next_state, targets_next_state):
+        # check that they're in the same lane
+        lateral_offset_diff = abs(
+            targets_next_state.position[1] - next_state.position[1]
+        )
+
+        if lateral_offset_diff > 3:
+            return 0
+
+        dist = next_state.position[0] - targets_next_state.position[0]
+        if dist < 0:
+            return 0
+        else:
+            return max(30 - dist, 0)
 
     def compute_speed_limit_cost(self, next_state, targets_next_state):
 
@@ -290,12 +306,16 @@ class CostCalculator:
         #         targets_next_state.position[0] - next_state.position[0]
         #     ) / abs(targets_next_state.speed - next_state.speed())
         #     return 1.0 / inv_cost
-        delta_velocity = 0
-        if lateral_offset_diff < 3:  # need to remove hardcode
-            distance = self._cost_distance(next_state, targets_next_state)
-        else:
-            distance = 10000
-        ttc = distance / targets_next_state.speed
+
+        distance = self._cost_distance(next_state, targets_next_state)
+
+        rel_vel = targets_next_state.speed - next_state.speed
+        rel_dist = targets_next_state.position[0] - next_state.position[0]
+        # If rel_vel and rel_dist are both positive or both negative, the gap between the cars will widen
+        if (rel_vel * rel_dist > 0):
+            return 0
+
+        ttc = distance / abs(rel_vel)
 
         # set an ideal ttc as 3 seconds and see how much the speed has to change
         ttc_ideal = 10  # taught in driving schools? but still hardcoded
