@@ -251,9 +251,6 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     else:
         subject_agent = BehaviorAgent(subject_vehicle, behavior=subject_behavior)
         destination = carla.Location(x=240.50791931152344, y=45.247249603271484, z=0.0)
-        # destination_wp = world.get_map().get_waypoint(subject_vehicle.get_location()).next_until_lane_end(10)[-1]
-        # destination_wp = destination_wp.next(40)[0]
-        # destination = destination_wp.transform.location
         subject_agent.set_destination(
             subject_agent.vehicle.get_location(), destination, clean=True
         )
@@ -269,14 +266,6 @@ def setup_scenario(world, client, synchronous_master=False, subject_behavior="no
     )
     current_lane_waypoints = nearest_waypoint.next_until_lane_end(1)
 
-    # for wp in current_lane_waypoints:
-    #     world.debug.draw_string(
-    #         Location(x=wp.transform.location.x, y=wp.transform.location.y, z=1),
-    #         "O",
-    #         draw_shadow=False,
-    #         color=carla.Color(r=255, g=0, b=0),
-    #         life_time=10,
-    #     )
     if subject_behavior == "manual":
         return (ego_vehicle, manual_vehicle, current_lane_waypoints, manual_agent)
     else:
@@ -332,8 +321,6 @@ def get_dummy_camera(world, ego_vehicle):
     camera = world.spawn_actor(
         camera_bp, transform, attach_to=ego_vehicle, attachment_type=Attachment.Rigid
     )
-    # camera.attributes["sensor_tick"] = 10
-    # camera_parent_vehicle = ego_vehicle
 
     return camera
 
@@ -370,11 +357,6 @@ def get_lane_marker_linestring_from_right_lane_road_and_lane_id(
     lane_marker_locations = []
     for wp in next_wps:
 
-        # Rotate forward vector 90 degrees to get right vector
-        # temp_vector = wp.transform.get_forward_vector()
-        # x = temp_vector.x
-        # temp_vector.x = temp_vector.y
-        # temp_vector.y = -x
         right_vector = wp.lane_width / 2 * getRightVector(wp.transform.rotation)
         lane_marker_location = Location(
             x=wp.transform.location.x + right_vector.x,

@@ -28,7 +28,6 @@ class PathPredictor:
         loc = self.vehicle.get_location()
         vel = self.vehicle.get_velocity()
         acc = self.vehicle.get_acceleration()
-        # self.t = self.world.get_snapshot().timestamp.elapsed_seconds
         self.t = t
         # state [6x1]: [x, y, xdot, ydot, xddot, yddot]
         self.state = np.array([[loc.x, loc.y, vel.x, vel.y, acc.x, acc.y]])
@@ -85,7 +84,6 @@ class PathPredictor:
             new_t = self.t + (i + 1) * dt
             # prediction -> [x, y, x_dot, y_dot, t]
             speed = np.sqrt(state[2][0] ** 2 + state[3][0] ** 2)
-            # prediction.append([new_loc.x, new_loc.y, state[2][0], state[3][0], new_t])
             prediction.append(State([new_loc.x, new_loc.y], speed, new_t))
             state = np.array(
                 [

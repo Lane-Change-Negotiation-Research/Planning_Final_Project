@@ -185,17 +185,15 @@ class scenario_manager:
         ax1.set_title("Velocity Profile")
         ax1.legend()
 
-        subject_acc = [((self.subject_traj[i+1].speed - self.subject_traj[i].speed) / 
-                (self.subject_traj[i+1].time - self.subject_traj[i].time)) 
-               for i in range(1, len(self.subject_traj)-1, 5)]
-        t = [self.time_step*i for i in range(len(subject_acc))]
+        subject_acc = [
+            (
+                (self.subject_traj[i + 1].speed - self.subject_traj[i].speed)
+                / (self.subject_traj[i + 1].time - self.subject_traj[i].time)
+            )
+            for i in range(1, len(self.subject_traj) - 1, 5)
+        ]
+        t = [self.time_step * i for i in range(len(subject_acc))]
         ax2.plot(t, subject_acc, label="Subject")
-
-        # ego_acc = [((self.ego_traj[i+1].speed - self.ego_traj[i].speed) / 
-        #         (self.ego_traj[i+1].time - self.ego_traj[i].time)) 
-        #        for i in range(1, len(self.ego_traj)-1, 5)]
-        # t = [self.time_step*i for i in range(len(ego_acc))]
-        # ax2.plot(t, ego_acc, label="Ego")
 
         ax2.set_xlabel("Time(s)")
         ax2.set_ylabel("Acceleration (m/sec^2)")
@@ -203,9 +201,9 @@ class scenario_manager:
         ax2.legend()
 
         fig.suptitle(
-            "Velocity/Acceleration Profile for " + self.subject_behavior + " behavior", fontsize=20
+            "Velocity/Acceleration Profile for " + self.subject_behavior + " behavior",
+            fontsize=20,
         )
-
 
         if not os.path.exists("./results"):
             os.makedirs("./results")
@@ -219,8 +217,6 @@ class scenario_manager:
         plt.close(fig)
 
     def loop(self):
-
-        # update_spectator(self.world, self.ego_vehicle)  # TODO: Spectator is buggy
 
         # 1. Get state estimation
         ego_transform = self.ego_vehicle.get_transform()
@@ -281,7 +277,6 @@ class scenario_manager:
         subject_path_slvt = [
             toSLVT(self.lane_marker_linestring, elem) for elem in subject_path
         ]
-        # print([(pt.position[0], pt.speed, pt.time) for pt in subject_path_slvt])
         for i in range(len(subject_path)):
             self.world.debug.draw_string(
                 carla.Location(
@@ -324,15 +319,6 @@ class scenario_manager:
             ) = self.latticeGenerator.generate_full_lattice(
                 ego_state_slvt, subject_path_slvt, self.has_lane_change_happend
             )
-
-            # print(reverse_lattice)
-
-            # 7. Get Best Goal States
-
-            # 8. Backtrack to get best path
-
-            # random.shuffle(goal_states)
-            # example_goal_state_tuple = goal_states[0]
 
             example_start_state_tuple = (
                 ego_state_slvt.position[0],
@@ -384,35 +370,12 @@ class scenario_manager:
                 get_ego_waypoint(self.world, self.ego_vehicle),
                 planned_action_sequence,
             )
-            # print([(pose.x, pose.y) for pose in self.traj_to_track])
-            # self.regenerate_traj_flag = True
 
         # # 3. Find next pose to track
-        # pose_to_track, next_index = self.path_follower.findNextLanePose(
-        #     eog_state_pose, self.traj_to_track
-        # )
+
         next_index = self.time_step_count
         self.next_timestep = next_index
-        # print(next_index, "IDX")
         pose_to_track = self.traj_to_track[next_index]
-        # print(self.planned_path)
-        # print(
-        #     (pose_to_track.x, pose_to_track.y, pose_to_track.speed),
-        #     (ego_state.position[0], ego_state.position[1], ego_state.speed * 3.6),
-        #     "TMP",
-        # )
-        # print(
-        #     ego_state_slvt.position[0],
-        #     ego_state_slvt.position[1],
-        #     ego_state_slvt.time,
-        #     "POS",
-        # )
-        # print(
-        #     "-------------------------------------------------------------------------------"
-        # )
-        # print(
-        #     "-------------------------------------------------------------------------------"
-        # )
 
         next_flag = self.lane_change_flags[next_index]
         if next_flag == 1:
@@ -436,14 +399,7 @@ class scenario_manager:
             )
 
         if pose_to_track is not None:
-            # print(
-            #     "Speed Tracking:",
-            #     pose_to_track.speed,
-            #     "Speed current:",
-            #     ego_state.speed,
-            #     "Plan progress:",
-            #     float(next_index) / len(self.traj_to_track),
-            # )
+
             self.world.debug.draw_string(
                 Location(x=pose_to_track.x, y=pose_to_track.y, z=1),
                 "O",
@@ -457,7 +413,6 @@ class scenario_manager:
             )
 
             # 4. Apply control signal on ego-vehicle and subject vehicle(actuation)
-            # self.ego_vehicle.apply_control(control_signal)
             self.ego_vehicle.set_transform(
                 carla.Transform(
                     location=carla.Location(pose_to_track.x, pose_to_track.y, 0),
@@ -466,12 +421,9 @@ class scenario_manager:
             )
             self.latest_tracked_speed_ego = pose_to_track.speed / 3.6
 
-        # 7. TODO: check for collision at every time step
-
         # 8. Tick
         self.time_step_count += 1
         self.curr_time = self.time_step_count * self.time_step
-        # print("Time: ", self.curr_time)
         self.world.tick()
 
     def play(self):

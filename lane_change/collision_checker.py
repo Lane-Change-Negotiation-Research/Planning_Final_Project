@@ -18,15 +18,7 @@ class CollisionChecker:
     ):
         collide = False
 
-        # if lane_change:
-        #     print("Checking radii")
-        # else:
-        #     print("Checking y")
-
-        # print("Ego:", ego_state.position[0], ego_state.position[1])
-
         for sub_state in subject_path:
-            # print(sub_state.position[0], sub_state.position[1])
             if lane_change:
                 collide = self.check_collision_radii(
                     ego_size, subject_size, ego_state, sub_state
@@ -37,10 +29,7 @@ class CollisionChecker:
                 )
 
             if collide:
-                # print("Collision found")
                 break
-
-        # print("Collide: ", collide)
 
         return collide
 
@@ -51,10 +40,8 @@ class CollisionChecker:
         horizontal_dist = abs(ego_state.position[1] - sub_state.position[1])
 
         if horizontal_dist > self.same_lane_range:
-            # print("Different lanes: ", ego_state.position[1], sub_state.position[1])
             return False
         else:
-            # print("Same lane, Collision:", abs(ego_state.position[0] - sub_state.position[0]) <= ego_size[0] + sub_size[0], ego_state.position[0], sub_state.position[0])
             return (
                 abs(ego_state.position[0] - sub_state.position[0])
                 <= ego_size[0] + sub_size[0]
@@ -62,22 +49,15 @@ class CollisionChecker:
 
     def check_collision_radii(self, ego_size, sub_size, ego_state, sub_state):
         if abs(ego_state.time - sub_state.time) > self.time_buffer:
-            # print("Time gap", ego_state.time, sub_state.time)
             return False
 
-        # ego_rad = math.sqrt(pow(ego_size[0]/2, 2) + pow(ego_size[1]/2, 2))
-        ego_rad = np.max([2*ego_size[0]/3, 2*ego_size[1]/3])
-        # sub_rad = math.sqrt(pow(sub_size[0]/2, 2) + pow(sub_size[1]/2, 2))
-        sub_rad = np.max([2*sub_size[0]/3, 2*sub_size[1]/3])
+        ego_rad = np.max([2 * ego_size[0] / 3, 2 * ego_size[1] / 3])
+        sub_rad = np.max([2 * sub_size[0] / 3, 2 * sub_size[1] / 3])
         center_dist = math.sqrt(
             pow(ego_state.position[0] - sub_state.position[0], 2)
             + pow(ego_state.position[1] - sub_state.position[1], 2)
         )
-        # print(center_dist, "; ", ego_state.position[0], ego_state.position[1], "; ", sub_state.position[0], sub_state.position[1])
         return center_dist <= ego_rad + sub_rad
-
-    # def update_lattice(self, lattice_graph):
-    #     self.lattice_graph = lattice_graph
 
     def update_subject_path(self, subject_path):
         self.subject_path = subject_path

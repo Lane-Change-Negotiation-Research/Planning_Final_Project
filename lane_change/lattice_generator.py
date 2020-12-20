@@ -181,13 +181,6 @@ class CostCalculator:
         cost = 0
         if next_state.position[1] > 0:
             cost += self.weights[0] * self._cost_distance(initial_state, next_state)
-        # cost += self.weights[1] * self._cost_lateral_offset(initial_state, next_state)
-        # cost += self.weights[2] * self._cost_longitudianl_velocity(
-        #     initial_state, next_state, 60
-        # )
-        # cost += self.weights[3] * self._cost_longitudinal_acceleration(
-        #     initial_state, next_state
-        # )
 
         targets_next_state = subject_path[
             int((next_state.time / self.subject_path_time_res))
@@ -195,18 +188,10 @@ class CostCalculator:
         targets_current_state = subject_path[
             int((next_state.time / self.subject_path_time_res)) - 1
         ]
-        # cost += self.compute_speed_limit_cost(next_state, targets_next_state)
-        # cost += self.compute_obstacle_inflation_cost(next_state, targets_next_state)
-        # cost += 5 * self.compute_blindspot_cost(next_state, targets_next_state)
-        # cost += self._cost_ttc(initial_state, next_state, targets_next_state)
-        # print(cost, "#####")
+
         cost += 1 * self._cost_delta_velocity(
             next_state, targets_current_state, targets_next_state
         )
-        # print(cost, "$$$$$")
-
-        ### Early lane change preference
-        # if action_params["deltaT"] > 1:
         cost += initial_state.time
 
         return cost
@@ -285,11 +270,7 @@ class CostCalculator:
 
         if lateral_offset_diff > 3:
             return 0
-        # else:
-        #     inv_cost = abs(
-        #         targets_next_state.position[0] - next_state.position[0]
-        #     ) / abs(targets_next_state.speed - next_state.speed())
-        #     return 1.0 / inv_cost
+
         delta_velocity = 0
         if lateral_offset_diff < 3:  # need to remove hardcode
             distance = self._cost_distance(next_state, targets_next_state)
@@ -305,8 +286,7 @@ class CostCalculator:
             ideal_speed = distance / ttc  # TODO: please check
         # this number will be a negative number
         delta_velocity = abs(ideal_speed - subject_state.speed)
-        # multiplying here to make it a positive cost associated with this change
-        # delta_velocity *= -1
+
         return delta_velocity
 
 
@@ -429,9 +409,6 @@ class LatticeGenerator:
         return False
 
     def generate_full_lattice(self, start_state, subject_path, lane_change_init_flag):
-        # print("Ego Current:", start_state.position[0], start_state.position[1])
-        # for sub_state in subject_path:
-        #     print("Subject:", sub_state.position[0], sub_state.position[1])
 
         lattice = (
             {}
@@ -537,9 +514,7 @@ class LatticeGenerator:
                         tmp_state.time,
                         1,
                     )
-                    # Check if goal
-                    # if (tmp_state.position[0] > 100):
-                    #     goal_states.append(tmp_state_tuple)
+
                 else:
                     tmp_state_tuple = (
                         tmp_state.position[0],

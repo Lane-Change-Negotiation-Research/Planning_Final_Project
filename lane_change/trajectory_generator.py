@@ -83,55 +83,15 @@ class PoseTemp:
         new_pose.theta = self.theta * scalar
 
 
-# The lattice generator generates plans three moves ahead
-# Check collision for all plans
-# Pick plan to follow, favoring previous plan
-# Execute one step and replan
-
-# I need a simple lattice generator
-# Another detailed trajectory planner
-
-
-# class PlanGenerator:
-#     def __init__(self):
-#         x = 0
-
-#     def get_next_actions(self, k=10):
-
-#         return [
-#             action.ACCELERATE,
-#             # action.ACCELERATE,
-#             # action.ACCELERATE,
-#             # action.ACCELERATE,
-#             action.ACCELERATE,
-#             action.CONSTANT_SPEED,
-#             action.ACCELERATE,
-#             action.DECELERATE,
-#             action.ACCELERATE,
-#             action.ACCELERATE,
-#             action.ACCELERATE,
-#             action.ACCELERATE,
-#             action.ACCELERATE,
-#             action.SWITCH_LANE,
-#         ]
-
-
 class PathFollower:
     def __init__(self, world, ego_vehicle, time_step):
 
         self.SAME_POSE_THRESHOLD = 2
         self.SAME_POSE_LOWER_THRESHOLD = 0.02
 
-        # self.plan_generator = PlanGenerator()
         self.trajectory_generator = TrajGenerator(world, ego_vehicle, time_step)
 
-    # def _generate_plan(self):
-
-    #     return self.plan_generator.get_next_actions()
-
     def get_trajectory(self, starting_speed, starting_waypoint, next_actions):
-
-        # next_actions = self._generate_plan()
 
         concatenated_trajectory = []
         lane_switch_flags = []
@@ -193,19 +153,15 @@ class TrajGenerator:
     def __init__(self, world, ego_vehicle, time_step):
         self.world = world
         self.time_step = time_step
-        # self.ego = ego_vehicle
-        # self.start_speed = speed  # m/s. The designed speed of starting lattice node instead of true speed
+
         self.a_max = 5  # m/s^2. Designed maximum acc
         self.jerk_time = 0.4  # sec. Time to go from 0 acc to a_max or a_min
-        # self.current_action = action.NO_ACTION
         self.traj_time = 1  # sec. acc/dec/const time. Must be >= 2*jerk_time
         self.lane_width = get_ego_waypoint(world, ego_vehicle).lane_width
         self.lane_change_time = 4.5  # sec. Based on https://toledo.net.technion.ac.il/files/2012/12/TRR_ToledoZohar_07.pdf between 4~5 seconds
         self.lane_change_time_disc = (
             time_step  # One pose per time disc for generated trajectories
         )
-        # self.lane_change_length = math.sqrt((speed * self.lane_change_time_constant)**2. - self.lane_width**2.) # based on time and speed
-        # self.lane_change_length = self.start_speed # Heuristic that approximates human lane change distance based on https://www.mchenrysoftware.com/board/viewtopic.php?t=339
 
     def constTraj(self, starting_speed, starting_waypoint):
         k = int(1 / self.time_step)
